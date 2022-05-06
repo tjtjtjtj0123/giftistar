@@ -1,0 +1,130 @@
+﻿<!--상품 구매 내역(MP300)-->
+@model List<PurchaseDtlModel>
+@using test211005.Models
+@{
+    int pageNum = ViewBag.Page ?? 1;
+    int totalPageCount = int.Parse(Session["totalPageCount"].ToString());
+    int start = (pageNum - 1) / 5 * 5 + 1;
+}
+<h2>상품 구매 내역</h2>
+<hr />
+<p>※구매확정을 하지 않아도 5일이 지나면 자동으로 구매확정되어 판매자에게 대금이 지급됩니다.</p>
+@*<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;">*@
+<table width="100%">
+    @{ var i = 0;}
+    @foreach (PurchaseDtlModel row in Model)
+    {
+        if (@row.ItemNo != 1 && @row.ItemNo != 2)
+        {
+            if (i % 5 == 0)
+            {
+                @:<tr>
+                                                                   }
+            <td style="width:20%; vertical-align:top">
+                <table>
+                    <tr>
+                        <td>
+                            <img style="width: 123px; height: 123px; border-radius:5%"
+                                 src="~/Content/@(row.ItemNo).jpg"
+                                 alt="Grapefruit slice atop a pile of other slices">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>@(row.ItemProviderName)</td>
+                    </tr>
+                    <tr>
+                        <td>@Html.ActionLink(row.ItemName, "MyPurchaseDetail/" + row.PurchaseNo, "MyPage")</td>
+                    </tr>
+                    <tr>
+                        <td>수량 : @row.PurchaseAmount</td>
+                    </tr>
+                    @if (row.PresentStatus == 1)
+                    {
+                        <tr>
+                            <td>수신인: @row.RecepientId</td>
+                        </tr>
+                    }
+                    @if (row.PurchaseStatusStr == "구매확정 전")
+                    {
+                        <tr>
+                            <td style="text-align:right;" id="@(row.PurchaseNo)">
+                                <a href="javascript:void(0);" class="btn btn-warning purchaseSuc" data-purchase="@row.PurchaseNo">구매확정</a>
+                            </td>
+                        </tr>
+                    }
+                    else if (row.PurchaseStatusStr == "취소")
+                    {
+                        <tr>
+                            <td id="@(row.PurchaseNo)">
+                                <font color="red">구매 취소</font>
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </td>
+            if (Model.Count/5 < 1 && i == (Model.Count - 1))
+            {
+                <td colspan="@(5-Model.Count)">&nbsp;</td>
+                @:</tr>
+            }
+            if (i % 5 == 4)
+            {
+                @:</tr>
+                                }
+            { i += 1; }
+        }
+    }
+</table>
+@if (Model.Count == 0)
+{
+    <h3 style="text-align:center">🎁</h3>
+    <h4 style="text-align:center">상품 구매 내역이 없습니다.</h4>
+}
+
+<div class="text-center">
+    <!--페이징처리 - 충전 내역 페이지-->
+    <div class="btn-group" id="pageBtn">
+        @if (start != 1)
+        {
+            <a class="btn btn-default" href="?page=@(start-1)"><</a>
+        }
+        @if (start == ((totalPageCount - 1) / 5 * 5 + 1))
+        { // 마지막 페이지Set인지 확인
+            var count = totalPageCount - start;
+            for (int j = start; j <= totalPageCount; j++)
+            {
+                <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+            }
+        }
+        else
+        {
+            for (int j = start; j < start + 5; j++)
+            {
+                <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+            }
+            <a class="btn btn-default" href="?page=@(start+5)">></a>
+        }
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).on("click", ".purchaseSuc", function () {
+            var purchaseNo = 0;
+            purchaseNo = $(this).data("purchase");
+            console.log(purchaseNo);
+            var urlData = '@Url.Action("AcceptToPurchase", "MyPage")' + '?PurchaseNo=' + purchaseNo;
+            //alert(sendData);
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    $('#' + purchaseNo).empty();
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+    </script>
+}

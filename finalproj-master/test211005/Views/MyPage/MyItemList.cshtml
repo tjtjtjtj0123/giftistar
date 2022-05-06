@@ -1,0 +1,80 @@
+﻿<!--상품 보유 내역(MP400)-->
+@model List<HoldingItemModel>
+@using test211005.Models
+@{
+    int pageNum = ViewBag.Page ?? 1;
+    int totalPageCount = int.Parse(Session["totalPageCount"].ToString());
+    int start = (pageNum - 1) / 5 * 5 + 1;
+}
+<h2>상품 보유 내역</h2>
+<hr/>
+<table width="100%">
+    @{ var i = 0;}
+    @foreach (HoldingItemModel row in Model)
+    {
+        if (i % 5 == 0)
+        {
+            @:<tr>
+                    }
+        <td style="width:20%; vertical-align:top">
+            <table>
+                <tr>
+                    <td>
+                        <img style="width: 123px; height: 123px; border-radius:5%"
+                             src="~/Content/@(row.ItemNo).jpg"
+                             alt="Grapefruit slice atop a pile of other slices">
+                    </td>
+                </tr>
+                <tr>
+                    <td>@row.ItemProviderName</td>
+                </tr>
+                <tr>
+                    <td>@Html.ActionLink(@row.ItemName, "MyItemDetail/" + @row.HoldingItemNo, "MyPage")</td>
+                </tr>
+                <tr>
+                    <td>사용 가능한 수량 : @(row.AvailableItemAmount)개</td>
+                </tr>
+            </table>
+        </td>
+        if (Model.Count / 5 < 1 && i == (Model.Count - 1))
+        {
+            <td colspan="@(5-Model.Count)">&nbsp;</td>
+                @:</tr>
+            }
+    if (i % 5 == 4)
+    {
+            @:</tr>
+                    }
+        { i += 1; }
+    }
+</table>
+@if (Model.Count == 0)
+{
+    <h3 style="text-align:center">🎫</h3>
+    <h4 style="text-align:center">상품 보유 내역이 없습니다.</h4>
+}
+<div class="text-center">
+    <!--페이징처리 - 충전 내역 페이지-->
+    <div class="btn-group" id="pageBtn">
+        @if (start != 1)
+        {
+            <a class="btn btn-default" href="?page=@(start-1)"><</a>
+        }
+        @if (start == ((totalPageCount - 1) / 5 * 5 + 1))
+        { // 마지막 페이지Set인지 확인
+            var count = totalPageCount - start;
+            for (int j = start; j <= totalPageCount; j++)
+            {
+                <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+            }
+        }
+        else
+        {
+            for (int j = start; j < start + 5; j++)
+            {
+                <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+            }
+            <a class="btn btn-default" href="?page=@(start+5)">></a>
+        }
+    </div>
+</div>

@@ -1,0 +1,839 @@
+﻿<!--일반 사용자 마이페이지-->
+@model MyPageViewModel
+@using test211005.Models
+@{
+    int pageNum = ViewBag.Page ?? 1;
+    int totalPageCount = int.Parse(Session["totalPageCount"].ToString());
+    int start = (pageNum - 1) / 5 * 5 + 1;
+}
+<h2>MY 캐시</h2>
+<hr />
+<table class="table table-sm" style="width:35%;">
+    <thead>
+        <tr>
+            <th scope="col" style="text-align:left">[@(Model.User.UserName)]님의 캐시 현황</th>
+            <th style="text-align:right">
+                @*<a href="@Url.Action("Withdraw", "MyPage")" class="btn btn-warning">출금 신청</a>*@
+                <a href="#" id="withdraw-btn" class="btn btn-warning">출금 신청</a>
+            </th>
+        </tr>
+    </thead>
+    <tr>
+        <th scope="row" style="text-align:left">총보유 잔액</th>
+        <td style="text-align:right">@(String.Format("{0:#,0}", Model.TotalCash))원</td>
+    </tr>
+    <tr>
+        <th scope="row" style="text-align:left">충전캐시</th>
+        <td style="text-align:right">@(String.Format("{0:#,0}", Model.GiftiCash.TotalCash))원</td>
+    </tr>
+    <tr>
+        <th scope="row" style="text-align:left">보너스캐시</th>
+        <td style="text-align:right">@(String.Format("{0:#,0}", Model.BonusCash.TotalCash))원</td>
+    </tr>
+    <tr>
+        <th scope="row" style="text-align:left">판매금캐시</th>
+        <td style="text-align:right">@(String.Format("{0:#,0}", Model.SellingCash.TotalCash))원</td>
+    </tr>
+</table>
+<br />
+<p>※ 캐시 충전내역과 사용내역을 모두 조회할 수 있습니다. (최근 1년까지 조회 가능)</p>
+<div style="border-radius:10px; border: 2px solid #FFE08C; padding-left:10px; width:540px;">
+    <table>
+        <tr>
+            <th width="10%">조회@('\n')기간</th>
+            <td>
+                <div class="tui-datepicker-input tui-datetime-input tui-has-focus form-control" style="z-index:1000">
+                    <input id="startDate" type="text" aria-label="Date" style="outline:none">
+                    <span class="tui-ico-date"></span>
+                    <div id="startpicker-container" style="margin-left: -1px;"></div>
+                </div>
+            </td>
+            <td>~</td>
+            <td>
+                <div class="tui-datepicker-input tui-datetime-input tui-has-focus form-control" style="z-index:1000">
+                    <input id="endDate" type="text" aria-label="Date" style="outline:none">
+                    <span class="tui-ico-date"></span>
+                    <div id="endpicker-container" style="margin-left: -1px;"></div>
+                </div>
+            </td>
+            <td style="padding:13px;">
+                <input class="btn btn-warning" type="button" id="filterByDate" value="조회">
+            </td>
+        </tr>
+    </table>
+</div>
+<br />
+<div id="btns">
+    <input class="btn btn-warning" type="button" id="chargeLst" value="충전내역">
+    <input class="btn btn-warning" type="button" id="purchaseLst" value="구매내역">
+    <input class="btn btn-warning" type="button" id="sellingLst" value="판매내역">
+</div>
+<h3 id="title">충전내역</h3>
+<table id="tablList" class="table table-sm" style="width:100%">
+    <thead>
+        <tr>
+            <th scope="col" style="text-align:center">번호</th>
+            <th scope="col" style="text-align:center">충전 수단</th>
+            <th scope="col" style="text-align:center">결제 금액</th>
+            <th scope="col" style="text-align:center">캐시 충전 금액(원)</th>
+            <th scope="col" style="text-align:center">잔액(원)</th>
+            <th scope="col" style="text-align:center">결제 상태</th>
+            <th scope="col" style="text-align:center">충전일시</th>
+            <th scope="col" style="text-align:center">취소일시</th>
+        </tr>
+    </thead>
+    @for (int i = 0; i < Model.ChargingList.Count; i++)
+    {
+        <tr>
+            <!--for문 돌려서 정보 출력-->
+            <td style="text-align:center">@(Model.ChargingList[i].ChargeNo)</td>
+            <td style="text-align:center">@(Model.ChargingList[i].Payment)</td>
+            <td style="text-align:right">@(Model.ChargingList[i].ChargePaidAmount)</td>
+            <td style="text-align:right">@(String.Format("{0:#,0}", Model.ChargingList[i].ChargeCashAmount))원</td>
+            <td style="text-align:right">@(String.Format("{0:#,0}", Model.ChargingList[i].CashRemain))원</td>
+            <td style="text-align:center">
+                @if (Model.ChargingList[i].CashStatus == "취소")
+                {
+                    @:<font color="red">
+            }
+                @(Model.ChargingList[i].CashStatus)
+                @if (Model.ChargingList[i].CashStatus == "취소")
+                {
+                    @:</font>
+            }
+            </td>
+            <td style="text-align:center">@(Model.ChargingList[i].RegDate)</td>
+            <td style="text-align:center">@(Model.ChargingList[i].RefundDate)</td>
+        </tr>
+    }
+</table>
+<div class="text-center">
+    <!--페이징처리 - 충전 내역 페이지-->
+    <div class="btn-group" id="pageBtn">
+        @if (Model.ChargingList.Count != 0)
+        {
+            if (start != 1)
+            {
+                <a class="btn btn-default" href="?page=@(start - 1)"><</a>
+            }
+            if (start == ((totalPageCount - 1) / 5 * 5 + 1))
+            { // 마지막 페이지Set인지 확인
+                var count = totalPageCount - start;
+                for (int i = start; i <= totalPageCount; i++)
+                {
+                    <a class="btn btn-@(pageNum == i ? "warning" : "default")" href="?page=@(i)">@(i)</a>
+                }
+            }
+            else
+            {
+                for (int i = start; i < start + 5; i++)
+                {
+                    <a class="btn btn-@(pageNum == i ? "warning" : "default")" href="?page=@(i)">@(i)</a>
+                }
+                <a class="btn btn-default" href="?page=@(start + 5)">></a>
+            }
+        }
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        $("#withdraw-btn").click(function (event) {
+            var totalCash = "@(Model.TotalCash)";
+            if(totalCash < 10000){
+                alert('출금 신청은 10,000원 이상부터 가능합니다.')
+            }
+            else {
+                var str = "@Url.Action("Withdraw", "MyPage")";
+                window.open(str , '네이버팝업', 'width=500, height=700, scrollbars=yes, resizable=no');
+            }
+        });
+    </script>
+    <script type="text/javascript">
+        var startDate = null; // 필터링 시작일
+        var endDate = null; // 필터링 끝일
+        var totalPageCount = 0;
+        var pageStr = "";
+
+        var today = new Date();
+        var picker = tui.DatePicker.createRangePicker({
+            startpicker: {
+                date: new Date(today.getFullYear(), today.getMonth(), 1),
+                input: '#startDate',
+                container: '#startpicker-container'
+            },
+            endpicker: {
+                date: today,
+                input: '#endDate',
+                container: '#endpicker-container'
+            },
+            selectableRanges: [
+                [null, new Date()]
+            ],
+            language: 'ko'
+        });
+
+        $('#filterByDate').click(function () { // 조회 버튼
+            //$("#pageBtn .btn-warning").addClass("btn-default");
+            //$("#pageBtn .btn-warning").removeClass("btn-warning");
+            startDate = $('#startDate').val();
+            endDate = $('#endDate').val();
+            console.log("filter is clicked!");
+            var pageNumber = 1;
+
+            var urlDate = "";
+            if (startDate != null)
+                urlData = '@Url.Action("ShowChargeListByDate", "MyPage")' + "?StartDate=" + startDate + "&EndDate=" + endDate;
+            else
+                urlData = '@Url.Action("ShowChargeList", "MyPage")';
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var dataLength = Object.keys(objJson).length;
+
+                    var str = "";
+                    pageStr = "";
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    str += "<THEAD>"
+                    str += "<TR>"
+                    str += "<TH scope=\"col\">번호</TH>"
+                    str += "<TH scope=\"col\">충전 수단</TH>"
+                    str += "<TH scope=\"col\">결제 금액</TH>"
+                    str += "<TH scope=\"col\">캐시 충전 금액(원)</TH>"
+                    str += "<TH scope=\"col\">잔액(원)</TH>"
+                    str += "<TH scope=\"col\">결제 상태</TH>"
+                    str += "<TH scope=\"col\">충전일시</TH>"
+                    str += "<TH scope=\"col\">취소일시</TH>"
+                    str += "</TR>"
+                    str += "</THEAD>"
+
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD scope=\"row\">" + val.ChargeNo + "</TD>"
+                        str += "<TD>" + val.Payment + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ChargePaidAmount + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ChargeCashAmount.toLocaleString('ko-KR') + "원" + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.CashRemain.toLocaleString('ko-KR') + "원" + "</TD>"
+                        str += "<TD>"
+                        if (val.CashStatus == "취소")
+                            str += "<font color=\"red\">"
+                        str += val.CashStatus
+                        if (val.CashStatus == "취소")
+                            str += "</font>"
+                        str += "</TD>"
+                        str += "<TD>" + val.RegDate + "</TD>"
+                        str += "<TD>"
+                        str += val.RefundDate
+                        str += "</TD>"
+                        str += "</TR>"
+                        totalPageCount = parseInt(val.TotalPageCount, 10);
+                        console.log(totalPageCount);
+                    });
+                    var start =  1;
+                    /*페이징 번호*/
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\"" + (start-1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                    var lastPage = parseInt((totalPageCount-1)/5,10)*5+1;
+                    console.log(lastPage);
+                    if (start == lastPage){ // 마지막 페이지Set인지 확인
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    }else{
+                        for (var i = start; i < start + 5; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\"" + (start+5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    if (dataLength != 0)
+                        $("#pageBtn").append(pageStr);
+                    else
+                        $('#pageBtn').empty();
+                    document.getElementById("title").innerHTML = "충전내역";
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+
+        })
+
+        $(document).on("click", ".charge", function(){ // ajax 호출 후, 버튼 누른경우
+            startDate = $('#startDate').val();
+            endDate = $('#endDate').val();
+            var pageNumber = $(this).data("no");
+            console.log("조회!!");
+
+            var urlDate = "";
+            if (startDate != null)
+                urlData = '@Url.Action("ShowChargeListByDate", "MyPage")' + "?StartDate=" + startDate + "&EndDate=" + endDate + "&page=" + pageNumber;
+            else
+                urlData = '@Url.Action("ShowChargeList", "MyPage")' + "?page=" + pageNumber;
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var dataLength = Object.keys(objJson).length;
+                    var str = "";
+                    pageStr = "";
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    str += "<THEAD>"
+                    str += "<TR>"
+                    str += "<TH scope=\"col\">번호</TH>"
+                    str += "<TH scope=\"col\">충전 수단</TH>"
+                    str += "<TH scope=\"col\">결제 금액</TH>"
+                    str += "<TH scope=\"col\">캐시 충전 금액(원)</TH>"
+                    str += "<TH scope=\"col\">잔액(원)</TH>"
+                    str += "<TH scope=\"col\">결제 상태</TH>"
+                    str += "<TH scope=\"col\">충전일시</TH>"
+                    str += "<TH scope=\"col\">취소일시</TH>"
+                    str += "</TR>"
+                    str += "</THEAD>"
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD scope=\"row\">" + val.ChargeNo + "</TD>"
+                        str += "<TD>" + val.Payment + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ChargePaidAmount + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ChargeCashAmount.toLocaleString('ko-KR') + "원" + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.CashRemain.toLocaleString('ko-KR') + "원" + "</TD>"
+                        str += "<TD>"
+                        if (val.CashStatus == "취소")
+                            str += "<font color=\"red\">"
+                        str += val.CashStatus
+                        if (val.CashStatus == "취소")
+                            str += "</font>"
+                        str += "</TD>"
+                        str += "<TD>" + val.RegDate + "</TD>"
+                        str += "<TD>"
+                        str += val.RefundDate
+                        str += "</TD>"
+                        str += "</TR>"
+                        totalPageCount = val.TotalPageCount;
+                    });
+                    /*페이징 번호*/
+                    console.log(pageNumber);
+                    var start =  parseInt((pageNumber - 1) / 5, 10) * 5 + 1;
+                    console.log("---------------------------");
+                    console.log(start);
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\"" + (start-1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                    console.log(parseInt((totalPageCount-1) / 5, 10) * 5 + 1);
+                    if (start == (parseInt((totalPageCount-1) / 5, 10) * 5 + 1)){ // 마지막 페이지Set인지 확인
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    }else{
+                        for (var i = start; i < start + 5; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\"" + (start+5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    if (dataLength != 0)
+                        $("#pageBtn").append(pageStr);
+                    else
+                        $('#pageBtn').empty();
+                    document.getElementById("title").innerHTML = "충전내역";
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        });
+
+        $('#chargeLst').click(function () { // 충전 내역 버튼
+            @(pageNum = 1)
+            console.log("filter is clicked!");
+            var start = 1;
+            var urlDate = "";
+            if (startDate != null)
+                urlData = '@Url.Action("ShowChargeListByDate", "MyPage")' + "?StartDate=" + startDate + "&EndDate=" + endDate;
+            else
+                urlData = '@Url.Action("ShowChargeList", "MyPage")';
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var dataLength = Object.keys(objJson).length;
+                    var str = "";
+                    pageStr = "";
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    str += "<THEAD>"
+                    str += "<TR>"
+                    str += "<TH scope=\"col\">번호</TH>"
+                    str += "<TH scope=\"col\">충전 수단</TH>"
+                    str += "<TH scope=\"col\">결제 금액</TH>"
+                    str += "<TH scope=\"col\">캐시 충전 금액(원)</TH>"
+                    str += "<TH scope=\"col\">잔액(원)</TH>"
+                    str += "<TH scope=\"col\">결제 상태</TH>"
+                    str += "<TH scope=\"col\">충전일시</TH>"
+                    str += "<TH scope=\"col\">취소일시</TH>"
+                    str += "</TR>"
+                    str += "</THEAD>"
+
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD scope=\"row\">" + val.ChargeNo + "</TD>"
+                        str += "<TD>" + val.Payment + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ChargePaidAmount + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ChargeCashAmount.toLocaleString('ko-KR') + "원" + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.CashRemain.toLocaleString('ko-KR') + "원" + "</TD>"
+                        str += "<TD>"
+                        if (val.CashStatus == "취소")
+                            str += "<font color=\"red\">"
+                        str += val.CashStatus
+                        if (val.CashStatus == "취소")
+                            str += "</font>"
+                        str += "</TD>"
+                        str += "<TD>" + val.RegDate + "</TD>"
+                        str += "<TD>"
+                        str += val.RefundDate
+                        str += "</TD>"
+                        str += "</TR>"
+                        totalPageCount = parseInt(val.TotalPageCount, 10);
+                        console.log(totalPageCount);
+                    });
+                    /*페이징 번호*/
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\"" +(start-1)+ "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                    console.log(((totalPageCount-1)/5*5+1));
+                    console.log("들어옴!!!!!!!!!!!2");
+                    console.log(start);
+                    var lastPage = parseInt((totalPageCount-1)/5,10)*5+1;
+                    console.log(lastPage);
+                    if (start == lastPage){ // 마지막 페이지Set인지 확인
+                        console.log("들어옴!!!!!!!!!!!");
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++){
+                            console.log(i);
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (@(pageNum) == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    }else{
+                        for (var i = start; i < start + 5; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (@(pageNum) == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"charge\" data-no=\"" + (start+5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    if (dataLength != 0)
+                        $("#pageBtn").append(pageStr);
+                    else
+                        $('#pageBtn').empty();
+                    document.getElementById("title").innerHTML = "충전내역";
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+
+        $('#purchaseLst').click(function () { // 구매내역 버튼
+            @(pageNum = 1)
+            var start = 1;
+            pageStr = "";
+            var urlDate = "";
+            if (startDate != null)
+                urlData = '@Url.Action("ShowPurchaseListByDate", "MyPage")' + "?StartDate=" + startDate + "&EndDate=" + endDate;
+            else
+                urlData = '@Url.Action("ShowPurchaseList", "MyPage")';
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    console.log('들어오긴하니...?');
+                    var objJson = jQuery.parseJSON(data);
+                    var str = "";
+                    var dataLength = Object.keys(objJson).length;
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    str += "<THEAD>"
+                    str += "<TH scope=\"col\">번호</TH>"
+                    str += "<TH scope=\"col\">상품명</TH>"
+                    str += "<TH scope=\"col\">캐시 결제 총액(원)</TH>"
+                    str += "<TH scope=\"col\">거래 상태</TH>"
+                    str += "<TH scope=\"col\">구매일시</TH>"
+                    str += "<TH scope=\"col\">취소일시</TH>"
+                    str += "</TR>"
+                    str += "</THEAD>"
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD>" + val.PurchaseNo + "</TD>"
+                        str += "<TD>" + val.ItemName + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.TotalPrice.toLocaleString('ko-KR') + "원</TD>"
+                        str += "<TD>"
+                        if (val.PurchaseStatusStr == "취소")
+                            str += "<font color=\"red\">"
+                        else if (val.PurchaseStatusStr == "구매확정 전")
+                            str += "<font color=\"#FF7F00\">"
+                        str += val.PurchaseStatusStr
+                        if (val.PurchaseStatusStr == "취소")
+                            str += "</font>"
+                        else if (val.PurchaseStatusStr == "구매확정 전")
+                            str += "</font>"
+                        str += "</TD>"
+                        str += "<TD>" + val.RegDate + "</TD>"
+                        str += "<TD>" + val.RefundDate + "</TD>"
+                        str += "</TR>"
+                        totalPageCount = parseInt(val.TotalPageCount, 10);
+                        console.log(totalPageCount);
+                    });
+                    /*페이징 번호*/
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\"" +(start-1)+"\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                    var lastPage = parseInt((totalPageCount-1)/5,10)*5+1;
+                    if (start == lastPage){ // 마지막 페이지Set인지 확인
+                        console.log("들어옴!!!!!!!!!!!");
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++){
+                            console.log(i);
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (@(pageNum) == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    }else{
+                        for (var i = start; i < start + 5; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (@(pageNum) == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\"" + (start+5)+"\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    if (dataLength != 0)
+                        $("#pageBtn").append(pageStr);
+                    else
+                        $('#pageBtn').empty();
+                    document.getElementById("title").innerHTML = "구매내역";
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+
+        $(document).on("click", ".purchase", function(){ // ajax 호출 후, 버튼 누른경우 -- 구매내역
+            startDate = $('#startDate').val();
+            endDate = $('#endDate').val();
+            var pageNumber = $(this).data("no");
+            console.log("구매!!");
+
+            var urlDate = "";
+            if (startDate != null)
+                urlData = '@Url.Action("ShowPurchaseListByDate", "MyPage")' + "?StartDate=" + startDate + "&EndDate=" + endDate + "&page=" + pageNumber;
+            else
+                urlData = '@Url.Action("ShowPurchaseList", "MyPage")' + "?page=" + pageNumber;
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var dataLength = Object.keys(objJson).length;
+
+                    var str = "";
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    str += "<THEAD>"
+                    str += "<TH scope=\"col\">번호</TH>"
+                    str += "<TH scope=\"col\">상품명</TH>"
+                    str += "<TH scope=\"col\">캐시 결제 총액(원)</TH>"
+                    str += "<TH scope=\"col\">거래 상태</TH>"
+                    str += "<TH scope=\"col\">구매일시</TH>"
+                    str += "<TH scope=\"col\">취소일시</TH>"
+                    str += "</TR>"
+                    str += "</THEAD>"
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD>" + val.PurchaseNo + "</TD>"
+                        str += "<TD>" + val.ItemName + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.TotalPrice.toLocaleString('ko-KR') + "원</TD>"
+                        str += "<TD>"
+                        if (val.PurchaseStatusStr == "취소")
+                            str += "<font color=\"red\">"
+                        str += val.PurchaseStatusStr
+                        if (val.PurchaseStatusStr == "취소")
+                            str += "</font>"
+                        str += "</TD>"
+                        str += "<TD>" + val.RegDate + "</TD>"
+                        str += "<TD>" + val.RefundDate + "</TD>"
+                        str += "</TR>"
+                        totalPageCount = parseInt(val.TotalPageCount, 10);
+                    });
+                    /*페이징 번호*/
+                    pageStr = "";
+                    console.log(pageNumber);
+                    var start =  parseInt((pageNumber - 1) / 5, 10) * 5 + 1;
+                    console.log(start);
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\"" + (start-1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                    if (start == (parseInt((totalPageCount-1) / 5, 10) * 5 + 1)){ // 마지막 페이지Set인지 확인
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    }else{
+                        for (var i = start; i < start + 5; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"purchase\" data-no=\"" + (start+5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    if (dataLength != 0)
+                        $("#pageBtn").append(pageStr);
+                    else
+                        $('#pageBtn').empty();
+                    document.getElementById("title").innerHTML = "구매내역";
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        });
+
+        $('#sellingLst').click(function () { // 판매내역 버튼
+            console.log("판매");
+            var pageNumber = 1;
+            var urlDate = "";
+            if (startDate != null)
+                urlData = '@Url.Action("ShowSellingListByDate", "MyPage")' + "?StartDate=" + startDate + "&EndDate=" + endDate;
+            else
+                urlData = '@Url.Action("ShowSellingList", "MyPage")';
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var dataLength = Object.keys(objJson).length;
+                    var str = "";
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    str += "<THEAD>"
+                    str += "<TR>"
+                    str += "<TH scope=\"col\" style=\"width:5%\">번호</TH>"
+                    str += "<TH scope=\"col\">상품명</TH>"
+                    str += "<TH scope=\"col\" style=\"width:18%\">판매금 캐시 금액(원)</TH>"
+                    str += "<TH scope=\"col\" style=\"width:13%\">판매 상태</TH>"
+                    str += "<TH scope=\"col\">판매 등록일시</TH>"
+                    str += "<TH scope=\"col\">판매 일시</TH>"
+                    str += "</TR>"
+                    str += "</THEAD>"
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD>" + val.GifticonNo + "</TD>"
+                        str += "<TD>" + val.ItemName + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ItemSellingPrice.toLocaleString('ko-KR') + "원</TD>"
+                        str += "<TD>"
+                        if (val.SellingStatus == "판매완료")
+                            str += "<font color=\"green\">"
+                        else if (val.SellingStatus == "판매불가")
+                            str += "<font color=\"red\">"
+                        str += val.SellingStatus
+                        if (val.SellingStatus == "판매완료" || val.SellingStatus == "판매불가")
+                            str += "</font>"
+                        str += "</TD>"
+                        str += "<TD>" + val.RegDate + "</TD>"
+                        str += "<TD>" + val.SoldDate + "</TD>"
+                        str += "</TR>"
+                        totalPageCount = parseInt(val.TotalPageCount, 10);
+                        console.log(totalPageCount);
+                    });
+                    /*페이징 번호*/
+                    pageStr = "";
+                    var start =  1;
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\"" + (start-1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+                    console.log((parseInt((totalPageCount-1) / 5, 10) * 5 + 1));
+                    if (start == (parseInt((totalPageCount-1) / 5, 10) * 5 + 1)){ // 마지막 페이지Set인지 확인
+                        console.log("check");
+                        for (var i = start; i <= totalPageCount; i++){
+                            console.log("inner");
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    }else{
+                        for (var i = start; i < start + 5; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\"" + (start+5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    console.log(pageStr);
+                    $("#pageBtn").append(pageStr);
+                    if (dataLength != 0)
+                        $("#tablList").append(str);
+                    else
+                        $('#pageBtn').empty();
+                    document.getElementById("title").innerHTML = "판매내역";
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+
+
+        $(document).on("click", ".selling", function(){ // ajax 호출 후, 버튼 누른경우 -- 구매내역
+            startDate = $('#startDate').val();
+            endDate = $('#endDate').val();
+            var pageNumber = $(this).data("no");
+            console.log("판매!!");
+
+            if (startDate != null)
+                urlData = '@Url.Action("ShowSellingListByDate", "MyPage")' + "?StartDate=" + startDate + "&EndDate=" + endDate + "&page=" + pageNumber;
+            else
+                urlData = '@Url.Action("ShowSellingList", "MyPage")' + "?page=" + pageNumber;
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var dataLength = Object.keys(objJson).length;
+                    var str = "";
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    str += "<THEAD>"
+                    str += "<TR>"
+                    str += "<TH scope=\"col\" style=\"width:5%\">번호</TH>"
+                    str += "<TH scope=\"col\">상품명</TH>"
+                    str += "<TH scope=\"col\" style=\"width:18%\">판매금 캐시 금액(원)</TH>"
+                    str += "<TH scope=\"col\" style=\"width:13%\">판매 상태</TH>"
+                    str += "<TH scope=\"col\">판매 등록일시</TH>"
+                    str += "<TH scope=\"col\">판매 일시</TH>"
+                    str += "</TR>"
+                    str += "</THEAD>"
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD>" + val.GifticonNo + "</TD>"
+                        str += "<TD>" + val.ItemName + "</TD>"
+                        str += "<TD style=\"text-align:right\">" + val.ItemSellingPrice.toLocaleString('ko-KR') + "원</TD>"
+                        str += "<TD>"
+                        if (val.SellingStatus == "판매완료")
+                            str += "<font color=\"green\">"
+                        else if (val.SellingStatus == "판매불가")
+                            str += "<font color=\"red\">"
+                        str += val.SellingStatus
+                        if (val.SellingStatus == "판매완료" || val.SellingStatus == "판매불가")
+                            str += "</font>"
+                        str += "</TD>"
+                        str += "<TD>" + val.RegDate + "</TD>"
+                        str += "<TD>" + val.SoldDate + "</TD>"
+                        str += "</TR>"
+                        totalPageCount = parseInt(val.TotalPageCount, 10);
+                        console.log(totalPageCount);
+                    });
+                    /*페이징 번호*/
+                    pageStr = "";
+                    console.log(pageNumber);
+                    var start =  parseInt((pageNumber - 1) / 5, 10) * 5 + 1;
+                    console.log(start);
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\"" + (start-1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                    if (start == (parseInt((totalPageCount-1) / 5, 10) * 5 + 1)){ // 마지막 페이지Set인지 확인
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    }else{
+                        for (var i = start; i < start + 5; i++){
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\""+ i +"\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"selling\" data-no=\"" + (start+5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    if (dataLength != 0)
+                        $("#pageBtn").append(pageStr);
+                    else
+                        $('#pageBtn').empty();
+                    document.getElementById("title").innerHTML = "판매내역";
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,82 @@
+﻿
+<!--상품상세 보기(M210)-->
+@{
+    ViewBag.Title = "ProductDetail";
+
+}
+@model ItemModel
+@using test211005.Models
+
+<table>
+    <tr>
+        <td>
+            <p style="text-align:left">@(Model.ItemProviderName)</p>
+            <p style="font-weight:bold;text-align:left">@(Model.ItemName)</p>
+        </td>
+        <td style="text-align:right;">
+            <h3>정가 @(String.Format("{0:#,0}", Model.ItemRealPrice))원</h3>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img style="width: 123px; height: 123px; border-radius:5%"
+                 src="~/Content/@(Model.ItemNo).jpg"
+                 alt="Grapefruit slice atop a pile of other slices">
+        </td>
+        <td>
+            <table>
+                <tr>
+                    <td>남은 재고 개수</td>
+                    <td style="text-align:left">@(Model.Gifticons.Count)개</td>
+                </tr>
+                <tr>
+                    <td>기본 주의 사항</td>
+                    <td style="text-align:left">@(Model.ItemDescription)</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align:left">
+                        ※사용자 본인이 등록한 상품 우측에는 체크 표시(✔)가 출력됩니다.
+                    </td>
+                </tr>
+            </table>
+       </td>
+    </tr>
+    <tr>
+        <td style="padding:0px; margin: 0px;" colspan="2"><hr /></td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <table>
+                @for (int i = 0; i < Model.Gifticons.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            상품 @(i + 1)
+                            @if (Model.UserNo == Model.Gifticons[i].UserNo)
+                            {<font>✔</font>}
+                        </td>
+                        <td>
+                            <table width="100%;">
+                                <tr>
+                                    <td>유효기간 @(Model.Gifticons[i].DueDate.ToString("yyyy-MM-dd"))</td>
+                                    <td style="text-align:right;">@(String.Format("{0:#,0}", Model.Gifticons[i].ItemSellingPrice))원</td>
+                                    
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="text-align:right;">(@(Model.Gifticons[i].DiscountPercent)%↓)</td>
+                    </tr>
+                }
+                <tr>
+                    <td colspan="2" style="text-align:left">
+                        @Html.ActionLink("구매하기", "ProductPurchase/" + @Model.ItemNo.ToString(), "Product", new { @Class = "btn btn-warning" })
+                        <span>&nbsp;</span>
+                        @Html.ActionLink("선물하기", "ProductPresent/" + @Model.ItemNo.ToString(), "Product", new { @Class = "btn btn-warning" })
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+

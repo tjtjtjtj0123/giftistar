@@ -1,0 +1,78 @@
+﻿<!--구매한 상품 상세보기(MP310)-->
+@model PurchaseDtlModel
+@using test211005.Models
+<h2>구매 상세 정보</h2>
+<hr />
+<table>
+    <tr>
+        <td>
+            <p style="text-align:left">@(Model.ItemProviderName)</p>
+            <p style="font-weight:bold; text-align:left">@(Model.ItemName)</p>
+        </td>
+        <td style="text-align:right;">
+            <h3>정가 @(String.Format("{0:#,0}", Model.ItemRealPrice))원</h3>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img style="width: 123px; height: 123px;"
+                 src="~/Content/@(Model.ItemNo).jpg"
+                 alt="Grapefruit slice atop a pile of other slices">
+        </td>
+        <td>
+            <table>
+                <tr>
+                    <td>기본 주의 사항</td>
+                    <td>기프티스타에서 발송된 상품은 B2B전용 상품으로 유효기간 연장 및 환불이 불가합니다.</td>
+                </tr>
+                <tr>
+                    <td>수량</td>
+                    <td>@(Model.PurchaseAmount)개</td>
+                </tr>
+                <tr>
+                    <td>구매일시</td>
+                    <td>@Model.RegDate</td>
+                </tr>
+                <tr>
+                    <td>구매 총액</td>
+                    <td>@(String.Format("{0:#,0}", Model.TotalPrice))원</td>
+                </tr>
+                @if (Model.PresentStatus == 1)
+                {
+                    <tr>
+                        <!--if문으로 거르기-->
+                        <td>수신인</td>
+                        <td>@Model.RecepientId</td>
+                    </tr>
+                }
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" style="padding:0px;">
+            <hr style="border:1px" />
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <table width="50%">
+                @for (int i = 0; i < Model.Gifticons.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <font>🎫</font> 구매 상품 @(i+1)
+                        </td>
+                    </tr>
+                    <tr>
+                        <th style="padding-bottom:10px;">유효기간</th>
+                        <td style="text-align:right;padding-bottom:10px;">@((Model.Gifticons[i].DueDate).ToString("yyyy-MM-dd"))</td>
+                    </tr>
+                    <tr>
+                        <th style="padding-bottom:18px;">구매가</th>
+                        <td style="text-align:right;padding-bottom:18px;">@(String.Format("{0:#,0}", Model.Gifticons[i].ItemSellingPrice))원</td>
+                    </tr>
+                }
+            </table>
+        </td>
+    </tr>
+</table>

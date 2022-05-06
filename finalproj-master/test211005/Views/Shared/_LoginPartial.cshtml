@@ -1,0 +1,18 @@
+﻿@using Microsoft.AspNet.Identity
+@if (Session["UserSession"] != null)
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("로그아웃", "Logout", "Account")</li>
+        @if (Session["IsAdmin"] == null)
+        {
+            <li>@Html.ActionLink("마이페이지", "Index", "MyPage")</li>
+        }
+    </ul>
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("회원가입", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
+        <li>@Html.ActionLink("로그인", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+}

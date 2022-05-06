@@ -1,0 +1,15 @@
+﻿<!--상품 판매 등록 성공(S110)-->
+@{
+    ViewBag.Title = "ProductRegistSuc";
+}
+@model GifticonModel
+@using test211005.Models
+
+<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;">
+        <hr />
+        <p>[@Model.ItemName] 기프티콘이 <span style="color:blue;">성공</span>적으로 판매 등록되었습니다.</p>
+        <hr />
+        <a href="@Url.Action("MySalesList", "MyPage")" class="btn btn-warning">상품 판매 내역으로 바로가기</a>
+    </div>
+</div>

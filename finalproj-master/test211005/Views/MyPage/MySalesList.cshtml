@@ -1,0 +1,97 @@
+﻿<!--상품 판매 내역(MP500)-->
+@model List<GifticonModel>
+@using test211005.Models
+@{
+    int pageNum = ViewBag.Page ?? 1;
+    int totalPageCount = int.Parse(Session["totalPageCount"].ToString());
+    int start = (pageNum - 1) / 5 * 5 + 1;
+}
+<h2>상품 판매 내역</h2>
+<hr/>
+<table>
+    @{ var i = 0;}
+    @foreach (GifticonModel row in Model)
+    {
+        if (i % 5 == 0)
+        {
+            @:<tr>
+                    }
+        <!--for문으로 상품 리스트 출력-->
+        <td style="width:20%; vertical-align:top">
+            <table>
+                <tr>
+                    <td>
+                        <img style="width: 123px; height: 123px; border-radius:5%"
+                             src="~/Content/@(row.ItemNo).jpg"
+                             alt="Grapefruit slice atop a pile of other slices">
+                    </td>
+                </tr>
+                <tr>
+                    <td>@(row.ItemProviderName)</td>
+                </tr>
+                <tr>
+                    <td>@Html.ActionLink(@row.ItemName, "MySalesDetail/" + @row.GifticonNo, "MyPage")</td>
+                </tr>
+                <tr>
+                    <td><span style="text-decoration:line-through;">@(String.Format("{0:#,0}", row.ItemRealPrice))</span> → @(String.Format("{0:#,0}", row.ItemSellingPrice))원(@(row.DiscountPercent)%↓)</td>
+                </tr>
+                <tr>
+                    <td>
+                    @if(row.SellingStatus == "판매완료")
+                    {
+                        @:<font color="green">
+                    }else if(row.SellingStatus == "판매불가")
+                    {
+                        @:<font color="red">
+                    }
+                    @(row.SellingStatus)
+                    @if(row.SellingStatus == "판매완료" || row.SellingStatus == "판매불가")
+                    {
+                        @:</font>
+                    }
+                    </td>
+                </tr>
+            </table>
+        </td>
+            if (Model.Count/5 < 1 && i == (Model.Count - 1))
+            {
+                <td colspan="@(5-Model.Count)">&nbsp;</td>
+                @:</tr>
+            }
+        if (i % 5 == 4)
+        {
+            @: </tr>
+                    }
+        { i += 1; }
+}
+</table>
+@if (Model.Count == 0)
+{
+    <h3 style="text-align:center">💰</h3>
+    <h4 style="text-align:center">상품 판매 내역이 없습니다.</h4>
+}
+<div class="text-center">
+    <!--페이징처리 - 충전 내역 페이지-->
+    <div class="btn-group" id="pageBtn">
+        @if (start != 1)
+        {
+            <a class="btn btn-default" href="?page=@(start-1)"><</a>
+        }
+        @if (start == ((totalPageCount - 1) / 5 * 5 + 1))
+        { // 마지막 페이지Set인지 확인
+            var count = totalPageCount - start;
+            for (var j = start; j <= totalPageCount; j++)
+            {
+                <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+            }
+        }
+        else
+        {
+            for (var j = start; j < start + 5; j++)
+            {
+                <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+            }
+            <a class="btn btn-default" href="?page=@(start+5)">></a>
+        }
+    </div>
+</div>

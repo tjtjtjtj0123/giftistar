@@ -1,0 +1,21 @@
+﻿<!--충전 실패(MP220)-->
+@using test211005.Models
+@model BlackUserModel
+
+<h2>캐시충전</h2>
+<hr />
+<p style="text-align:center;">캐시 충전에 <span style="color:red;">실패</span>하였습니다.</p>
+<hr />
+<br />
+<div style="text-align:center;">
+    <p><span style="color:red;">@(Model.User.UserName) 회원님은 @(Model.DeniedMsg)</span></p>
+    <br />
+    <p>캐시충전 제한에 대한 자세한 내용은</p>
+    <p>온라인 고객센터로 문의하여 주시기 바랍니다.</p>
+    <br />
+    <p>감사합니다.</p>
+    <br />
+</div>
+<div style="display:flex; align-items:center; justify-content:center;">
+    @Html.ActionLink("충전하기", "Charge", "MyPage", new { @Class="btn btn-warning"})
+</div>

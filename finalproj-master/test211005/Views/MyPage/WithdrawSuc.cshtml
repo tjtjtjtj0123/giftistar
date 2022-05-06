@@ -1,0 +1,24 @@
+﻿@{ var orderno = ViewBag.OrderNo ?? 0; }
+<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;">
+        <img style="width: 50px; height: 50px; border-radius:5%"
+             src="~/Content/approval.png"
+             alt="Grapefruit slice atop a pile of other slices">
+        <h2>결제 성공</h2>
+        <br />
+        <p>기프티 캐시가 정상적으로 출금 신청 되었습니다.</p>
+        <br />
+        <input type="button" id="backToPage" value="확인" class="btn btn-warning" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#backToPage').click(function () {
+            window.close();
+            var str = "@Url.Action("Index", "MyPage")";
+            opener.location.replace(str);
+            opener.location.href  = str;
+        })
+    </script>
+}

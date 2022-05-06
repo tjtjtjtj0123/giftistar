@@ -1,0 +1,140 @@
+﻿<!--전체 구매 내역 상세보기(AP210)-->
+@using test211005.Models
+@model PurchaseDtlModel
+<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;border-radius:10px; border: 5px solid #FFE08C; padding:20px 50px 20px 50px;">
+        <h2>구매 상세 조회</h2>
+        <hr />
+        @*<table style="display:inline-block; float:none;border-radius:10px; background-color: #FFC872; padding:10px 25px 10px 25px;">*@
+        <table id="tablList">
+            <tr>
+                <th>구매번호</th>
+                <td>@Model.PurchaseNo</td>
+            </tr>
+            <tr>
+                <th>고객번호</th>
+                <td>@Model.UserNo</td>
+            </tr>
+            <tr>
+                <th>아이디</th>
+                <td>@Model.UserId</td>
+            </tr>
+            <tr>
+                <th>아이템 이름</th>
+                <td>@Model.ItemName</td>
+            </tr>
+            <tr>
+                <th>아이템 가격(원)</th>
+                <td>@(String.Format("{0:#,0}", Model.TotalPrice))원</td>
+            </tr>
+            @if (Model.PresentStatus == 1)
+            {
+                <tr>
+                    <!--if문으로 거르기-->
+                    <th>수신인</th>
+                    <td>@Model.RecepientId</td>
+                </tr>
+            }
+            <tr>
+                <th>구매일시</th>
+                <td>@Model.RegDate</td>
+            </tr>
+            <tr>
+                <th>취소일시</th>
+                <td>@Model.RefundDate</td>
+            </tr>
+            <tr>
+                <th>구매상태</th>
+                <td><span id="status">@Model.PurchaseStatusStr</span></td>
+            </tr>
+            <tr>
+                <th>취소여부</th>
+                <td>
+                    @if (Model.PurchaseStatus == 2)
+                    {
+                        <span onclick="cancel()"><font color="blue">취소 가능</font></span>
+                    }
+                    else
+                    {
+                        <font color="red">취소 불가능</font>
+                    }
+                </td>
+            </tr>
+            @foreach (GifticonModel row in Model.Gifticons)
+            {
+                <tr>
+                    <td colspan="2" style="padding:0px;">
+                        <hr style="border:1px" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>기프티콘 번호</th>
+                    <td>@row.GifticonNo</td>
+                </tr>
+                <tr>
+                    <th>유효기간</th>
+                    <td>@row.DueDate</td>
+                </tr>
+                <tr>
+                    <th>구매가</th>
+                    <td>@(String.Format("{0:#,0}", row.ItemSellingPrice))원</td>
+                </tr>
+            }
+            <tr>
+                <td colspan="2"><hr/></td>
+            </tr>
+            <tr>
+                <th>
+                    <b id="t1" />
+                </th>
+                <td>
+                    <span id="test1" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align:right">
+                    <span id="test2"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+        @section Scripts {
+            <script>
+                function cancel() {
+                    var tag1 = "<input id=\"RefundMsg\" class=\"form-control\"/>";
+
+                    var tag2 = "<input type=\"button\" id=\"submit\" class=\"btn btn-warning\" value=\"구매 취소\" />";
+
+
+
+                    //.innerHTML = "str" : 해당 태그 안에  str를 덮어씌움
+
+                    document.getElementById("test1").innerHTML = tag1;
+                    document.getElementById("t1").innerHTML = "환불 사유";
+                    document.getElementById("test2").innerHTML = tag2;
+
+                    $('#submit').click(function () {
+                        refundMsg = $('#RefundMsg').val();
+                        console.log(refundMsg);
+                        var purchaseNo = @Model.PurchaseNo;
+                        var urlData = '@Url.Action("DoPurchaseRefund", "Admin")' + "?RefundMsg=" + refundMsg + "&PurchaseNo=" + purchaseNo;
+                        $.ajax({
+                            type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                            url: urlData,            // Json 형식의 데이터이다.
+                            success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                                alert("성공적으로 구매가 취소 되었습니다.");
+                                window.close();
+                                var str = "@Url.Action("ShowAllPurchase", "Admin")";
+                                opener.location.replace(str);
+                                opener.location.href  = str;
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                                alert("통신 실패.")
+                            }
+                        });
+                    })
+                }
+            </script>
+        }
+

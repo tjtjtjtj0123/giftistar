@@ -1,0 +1,45 @@
+﻿<!--충전 성공(MP210)-->
+@using test211005.Models
+@model ChargeViewModel
+
+<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;">
+        <hr />
+        <p style="text-align:center;">캐시 충전이 <span style="color:blue;">성공</span>적으로 완료 되었습니다.</p>
+        <hr />
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th scope="col" style="text-align:center;">충전 금액</th>
+                    <th scope="col" style="text-align:center;">충전 후 잔액</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>@(String.Format("{0:#,0}", Model.ChargeCashAmount))원</td>
+                <td>@(String.Format("{0:#,0}", Model.ChargedTotalCash))원</td>
+            </tr>
+        </table>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <td>결제수단 : @(Model.PaymentStr)</td>
+                    <td>결제업체 : 기프티스타</td>
+                </tr>
+            </thead>
+            <tr>
+                <td>결제일자 : @(Model.RegDateStr)</td>
+                <td>결제금액: @(Model.ChargePaidAmountStr)</td>
+            </tr>
+        </table>
+        <br />
+        @{ string ItemUrl = Url.Action("ProductDetail/" + Model.BackItemNo, "Product"); }
+        @if (Model.BackItemNo != 0)
+        {
+            <a href="@(ItemUrl)" class="btn btn-warning">보고있던 상품으로 돌아가기</a>
+        }
+        else
+        {
+            <a href="@Url.Action("Index", "Product")" class="btn btn-warning">상품 구매하러 가기</a>
+        }
+    </div>
+</div>

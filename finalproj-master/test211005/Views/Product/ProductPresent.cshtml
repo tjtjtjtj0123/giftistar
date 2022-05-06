@@ -1,0 +1,246 @@
+﻿<!--상품 선물(P200)-->
+@{
+    ViewBag.Title = "ProductPresent";
+}
+@using test211005.Models
+@model PurchaseModel
+
+<h2>기프티콘 선물</h2>
+<hr />
+<h3>기프티콘 상품 정보</h3>
+<table>
+    <tr>
+        <td>
+            <img style="width: 123px; height: 123px; border-radius:5%"
+                 src="~/Content/@(Model.Item.ItemNo).jpg"
+                 alt="Grapefruit slice atop a pile of other slices">
+        </td>
+        <td>
+            <table>
+                <tr>
+                    <td style="text-align:left">@Model.Item.ItemProviderName</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left"><b>@Model.Item.ItemName</b></td>
+                </tr>
+                <tr>
+                    <td style="text-align:left">@(String.Format("{0:#,0}", Model.Item.ItemRealPrice)) 원</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td>구매 가능한 기프티콘 개수 : </td>
+        <td>@(Model.StockAmount)개</td>
+    </tr>
+</table>
+<form id="frm">
+    <table>
+        <!--for문으로 기프티콘 리스트 출력-->
+        <tr>
+            <td>
+                <table>
+                    @for (int i = 0; i < Model.StockAmount; i++)
+                    {
+                        <tr>
+                            <td style="padding-bottom:15px;">상품 @(i + 1)</td>
+                            <td style="padding-bottom:15px;">유효기간 @(Model.Gifticons[i].DueDate.ToString("yyyy-MM-dd"))</td>
+                            <td style="padding-bottom:15px; text-align:right;">@(String.Format("{0:#,0}", @Model.Gifticons[i].ItemSellingPrice))원</td>
+                            <td style="padding-bottom:15px; text-align:right;">(@Model.Gifticons[i].DiscountPercent%↓)</td>
+                            <td style="padding-bottom:15px;"><input type="checkbox" name="chkbox" id="@(@Model.Gifticons[i].GifticonNo)" value=@(@Model.Gifticons[i].ItemSellingPrice) onclick="itemSum(this.form)" /></td>
+                        </tr>
+                    }
+                </table>
+
+            </td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td>총 결제 금액</td>
+            <td><input name="total_sum" class="form-control" type="text" value="0" size="10" style="text-align:right;" readonly></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>보유 캐시</td>
+            <td><input name="totalCash" class="form-control" id="totalCash" data-price="@Model.TotalAsset" style="text-align:right;" type="text" size="10" value=@(String.Format("{0:#,0}", Model.TotalAsset)) readonly></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>수신인 ID</td>
+
+            @*<td>선택된 수신인 ID</td>
+            <td><input id="resultUser" readonly class="form-control" /></td>
+        </tr>
+        <tr>
+            <td>ID 검색</td>*@
+            <td>
+                <input name="recepient" id="recepient" class="form-control" style="margin-right:10px; float:left;" />
+            </td>
+            <td>
+                <input class="btn btn-warning" type="button" id="checkUser" value="선택">
+
+                @*<input class="btn btn-warning" type="button" id="checkUser" value="검색">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <table id="tblList" class="table table-sm"></table>*@
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align:left">
+                @{ string url = Url.Action("Charge/" + Model.Item.ItemNo, "MyPage"); }
+                <a href="@(url)" class="btn btn-warning">캐시충전</a>
+                <span>&nbsp;</span>
+                <a href="#" id="charge-btn" class="btn btn-warning">결제</a>
+            </td>
+        </tr>
+    </table>
+</form>
+
+@section Scripts {
+    <script>
+        var total = 0;
+        var list;
+        var isExist = 0;
+        var check = 0;
+        var recepientId = 0;
+
+        //var recepientId = '';
+
+        /*선택된 기프티콘의 가격들의 합을 구하는 함수*/
+        function itemSum(frm) {
+            var sum = 0;
+            list = [];
+            var count = frm.chkbox.length;
+
+            if (count == undefined) { // 1개
+                if (frm.chkbox.checked == true) {
+                    console.log(frm.chkbox.id);
+                    sum += parseInt(frm.chkbox.value);
+                    list[0] = frm.chkbox.id;
+                }
+            } else { // 1개 이상인 경우
+                for (var i = 0; i < count; i++) {
+                    if (frm.chkbox[i].checked == true) {
+                        console.log(frm.chkbox[i].id);
+                        sum += parseInt(frm.chkbox[i].value);
+                        list[i] = frm.chkbox[i].id;
+                    }
+                }
+            }
+            total = sum;
+            frm.total_sum.value = sum.toLocaleString('ko-KR');
+        }
+
+        /*구매 유효성 체크하고 결과 보내는 함수*/
+        $(document).ready(function(){
+            $("#charge-btn").click(function (event) {
+                var MyAsset = $("#totalCash").data("price");
+
+                if (total == 0) // 선택된 상품 無
+                    alert("상품을 선택해주세요.");
+                else if (isExist == 0 || check == 0) // 선물받을 사용자가 존재하지 X
+
+                //else if (isExist == 0) // 선물받을 사용자가 존재하지 X
+                    alert("사용자 ID를 확인해주세요.")
+                else {
+                    if (MyAsset < total) // 보유 캐시 < 결제해야할 금액
+                        alert("결제할 캐시가 부족합니다.");
+                    else {
+                        event.preventDefault();
+                        var str = "@Url.Action("ProductPresentSuc", "Product", new {itemNo = Model.Item.ItemNo})" + "&total=" + total + "&GifticonNos=" + list + "&recepientId=" + recepientId;
+                        window.location.href = str;
+                    }
+                }
+            });
+        })
+
+        @*/*선물 받을 사용자 존재하는 ID인지 확인하는 함수*/
+        $('#checkUser').click(function () { // 선택 버튼
+            var keyword = $('#recepient').val();
+            console.log(recepientId);
+            var urlData = '@Url.Action("CheckIsExist", "Product")' + "?KeyWord=" + keyword;
+            var usernum = 0;
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var dataLength = Object.keys(objJson).length;
+                    var str = "";
+                    $('#tblList').empty();
+                    if (dataLength == 0) {
+                        alert('선물할 수 있는 사용자가 존재하지 않습니다.');
+                        return;
+                    }
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD>"
+                        str += val.UserId
+                        str += "</TD>"
+                        str += "<TD>"
+                        str += val.UserName
+                        str += "</TD>"
+                        str += "<TD>"
+                        str += "<a href=\"javascript:void(0);\" class=\"userFilter btn btn-warning\" data-no=\"" + val.UserId + "\">선택</a>"
+                        str += "</TD>"
+                        str += "</TR>"
+                    });
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+
+        $(document).on("click", ".userFilter", function () { // 선택 누른 경우
+            recepientId = $(this).data("no");
+            isExist = 1;
+            $('$resultUser').val(recepientId);
+        })*@
+
+        /*선물 받을 사용자 존재하는 ID인지 확인하는 함수*/
+        $('#checkUser').click(function () { // 선택 버튼
+            recepientId = document.getElementById('recepient').value;
+            console.log(recepientId);
+            var urlData = '@Url.Action("CheckIsExist", "Product")' + "?UserId=" + recepientId;
+            var usernum = 0;
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    console.log("success");
+                    $.each(objJson, function (i, val) {
+                        console.log(val.UserNo);
+                        if (val.UserNo != 0){
+                            isExist = 1;
+                            usernum = val.UserNo;
+                        }
+                        else
+                            isExist = 0;
+                    });
+                    /*검사는 했지만, 존재하는 유저인지 확인*/
+                    if (isExist == 1) {
+                        var whoami = @(Model.User.UserNo);
+                        if (usernum == whoami){
+                            alert("본인을 수신인으로 설정할 수 없습니다.")
+                            isExist = 0;
+                        }
+                        else
+                            alert("선물 가능한 사용자 ID입니다.")
+                    }
+                    else {
+                        alert("존재하지 않는 유저입니다.")
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+            check = 1; // 검사했는 지 확인
+        })
+    </script>
+}

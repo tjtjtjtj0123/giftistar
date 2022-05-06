@@ -1,0 +1,199 @@
+﻿@using test211005.Models
+@model ChargeModel
+<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;border-radius:10px; border: 5px solid #FFE08C; padding:20px 50px 20px 50px;">
+        <h2>결제 내역 상세보기</h2>
+        <hr/>
+        @*<table style="display:inline-block; float:none;border-radius:10px; background-color: #FFC872; padding:10px 25px 10px 25px;">*@
+        <table id="tablList">
+            <tr>
+                <th>번호</th>
+                <td>@Model.ChargeNo</td>
+            </tr>
+            <tr>
+                <th>고객번호</th>
+                <td>@Model.UserNo</td>
+            </tr>
+            <tr>
+                <th>아이디</th>
+                <td>@Model.UserId</td>
+            </tr>
+            <tr>
+                <th>이름</th>
+                <td>@Model.UserName</td>
+            </tr>
+            <tr>
+                <th>결제 금액</th>
+                <td>@Model.ChargePaidAmount</td>
+            </tr>
+            <tr>
+                <th>캐시 충전 금액(원)</th>
+                <td>@(String.Format("{0:#,0}", Model.ChargeCashAmount))원</td>
+            </tr>
+            <tr>
+                <th>잔액(원)</th>
+                <td>@(String.Format("{0:#,0}", Model.CashRemain))원</td>
+            </tr>
+            <tr>
+                <th>결제상태</th>
+                <td>
+                    @if (Model.CashStatus == "취소")
+                    {
+                        @:<font color="red">
+                    }
+                        @Model.CashStatus
+                    @if (Model.CashStatus == "취소")
+                    {
+                        @:</font>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <th>결제일시</th>
+                <td>@Model.RegDate</td>
+            </tr>
+            <tr>
+                <th>취소일시</th>
+                <td>@Model.RefundDate</td>
+            </tr>
+            <tr>
+                <th>캐시 만료일</th>
+                <td>@Model.CashDueDate</td>
+            </tr>
+            <tr>
+                <th>회수 상태</th>
+                <td>
+                    @if (Model.RefundStatus == 1) {
+                        <span onclick="refund()"><font color="blue">회수 가능</font></span>
+                    }
+                    else {
+                        <font color="red">회수 불가능</font>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <th>취소 여부</th>
+                <td>
+                    @if (Model.ReTrieveStatus == 1)
+                    {
+                        <span onclick="retrieve()"><font color="blue">취소 가능</font></span>
+                    }
+                    else
+                    {
+                        <font color="red">취소 불가능</font>
+                    }
+                </td>
+            </tr>
+        </table>
+        <hr/>
+        <table>
+            <tr>
+                <td>
+                    <b id="t1" />
+                </td>
+                <td>
+                    <span id="test1" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b id="t2" />
+                </td>
+                <td style="text-align:right">
+                    <span id="test2"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align:right">
+                    <span id="test3"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function refund() {
+            var price = @(Model.CashRemain);
+            var refundMsg = "";
+                    var tag1 = "<input id=\"RefundPrice\" class=\"form-control\" value=\""+ price.toLocaleString('ko-KR') +"\" readonly/>";
+
+                    var tag2 = "<input id=\"RefundMsg\" class=\"form-control\"/>";
+
+                    var tag3 = "<input type=\"button\" id=\"submit1\" class=\"btn btn-warning\" value=\"캐시 회수\" />";
+
+
+
+                    //.innerHTML = "str" : 해당 태그 안에  str를 덮어씌움
+                    document.getElementById("t1").innerHTML = "회수 금액";
+                    document.getElementById("test1").innerHTML = tag1;
+                    document.getElementById("t2").innerHTML = "회수 사유";
+                    document.getElementById("test2").innerHTML = tag2;
+
+                    document.getElementById("test3").innerHTML = tag3;
+
+                    $('#submit1').click(function () {
+                        refundMsg = $('#RefundMsg').val();
+                        console.log(refundMsg);
+                        var cashNo = @Model.ChargeNo;
+                        var urlData = '@Url.Action("DoRefund", "Admin")' + "?RefundMsg=" + refundMsg + "&CashNo=" + cashNo;
+                        $.ajax({
+                            type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                            url: urlData,            // Json 형식의 데이터이다.
+                            success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                                alert("성공적으로 캐시가 회수되었습니다.");
+                                window.close();
+                                var str = "@Url.Action("Index", "Admin")";
+                                opener.location.replace(str);
+                                opener.location.href  = str;
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                                alert("통신 실패.")
+                            }
+                        });
+                    })
+                }
+
+                function retrieve() {
+                    var tag1 = "<input id=\"RetrieveMsg\" class=\"form-control\"/>";
+
+                    var tag2 = "<input type=\"button\" id=\"submit2\" class=\"btn btn-warning\" value=\"결제 취소\" />";
+
+                    //.innerHTML = "str" : 해당 태그 안에  str를 덮어씌움
+
+                    document.getElementById("t1").innerHTML = "결제 취소 사유";
+                    document.getElementById("test1").innerHTML = tag1;
+                    document.getElementById("t2").innerHTML = "";
+                    document.getElementById("test2").innerHTML = tag2;
+
+                    document.getElementById("test3").innerHTML = "";
+
+                    $('#submit2').click(function () {
+                        var Payment = "@(Model.Payment)";
+                        console.log(Payment);
+                        refundMsg = $('#RetrieveMsg').val();
+                        console.log(refundMsg);
+                        var cashNo = @Model.ChargeNo;
+                        var userId = "@Model.UserId";
+                        var urlData = '@Url.Action("DoRetrieve", "Admin")' + "?RefundMsg=" + refundMsg + "&CashNo=" + cashNo + "&UserId=" +  userId + "&Payment=" + Payment;
+                        console.log(urlData);
+                        $.ajax({
+                            type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                            url: urlData,            // Json 형식의 데이터이다.
+                            success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                                alert("성공적으로 캐시가 취소되었습니다.");
+                                window.close();
+                                var str = "@Url.Action("Index", "Admin")";
+                                opener.location.replace(str);
+                                opener.location.href  = str;
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                                alert("통신 실패.")
+                            }
+                        });
+                    })
+                }
+    </script>
+}
+
+

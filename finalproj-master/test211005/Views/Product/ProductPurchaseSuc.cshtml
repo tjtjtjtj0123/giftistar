@@ -1,0 +1,14 @@
+﻿<!--상품 구매 성공(P110)-->
+@{
+    ViewBag.Title = "ProductPurchaseSuc";
+}
+@using test211005.Models
+@model PurchaseModel
+<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;">
+        <hr />
+        <p>[@(Model.Item.ItemName)] 기프티콘 @(Model.PurchaseAmount)개가 <span style="color:blue;">성공</span>적으로 결제되었습니다.</p>
+        <hr />
+        <a href="@Url.Action("MyPurchaseList", "MyPage")" class="btn btn-warning">상품 구매 내역</a>
+     </div>
+</div>

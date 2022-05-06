@@ -1,0 +1,169 @@
+﻿<!--캐시 충전(MP200)-->
+@using test211005.Models
+@model ChargeViewModel
+
+<h2>캐시충전</h2>
+@using (Html.BeginForm("Charge", "MyPage", FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    <table style="width:75%" class="table table-sm">
+        <thead>
+            <tr>
+                <th style="text-align:left">충전 수단</th>
+                <th colspan="2" style="text-align:right; padding-right:10px;">총 보유캐시 잔액 : @(String.Format("{0:#,0}", Model.TotalCash))원</th>
+            </tr>
+        </thead>
+        <tr>
+            <td style="text-align:left;width:25%">
+                <input type="radio" name="Payment" id="credit" onclick="getPayment(event)" value="0" @(Model.Payment == 0 ? "checked" : "") />
+                <label for="credit">
+                    <font style="font-weight:normal">&nbsp;신용카드&nbsp;</font>
+                    <img src="~/Content/credit.png"
+                         alt="Grapefruit slice atop a pile of other slices" height="80%">
+                </label>
+            </td>
+            <td style="text-align:left;width:23%">
+                <input type="radio" name="Payment" id="paypal" onclick="getPayment(event)" value="1" @(Model.Payment == 1 ? "checked" : "") style="vertical-align:middle;"/>
+                <label for="paypal" style="vertical-align : middle;float:right">
+                    <font style="float:left;vertical-align : middle; padding-top:2%;font-weight:normal">&nbsp;PayPal&nbsp;</font>
+                    <img src="~/Content/paypal.png" alt="Grapefruit slice atop a pile of other slices">
+                </label>
+            </td>
+            <td style="text-align:left;width:25%">
+                <input type="radio" name="Payment" id="mobile" onclick="getPayment(event)" value="2" @(Model.Payment == 2 ? "checked" : "") />
+                <label for="mobile">
+                    <font style="font-weight:normal">&nbsp;휴대폰&nbsp;</font>
+                    <img src="~/Content/credit.png"
+                         alt="Grapefruit slice atop a pile of other slices">
+                </label>
+            </td>
+        </tr>
+    </table>
+    <table style="width:70%" class="table table-sm">
+        <thead>
+            <tr>
+                <th colspan="3" style="text-align:left">충전 금액</th>
+            </tr>
+        </thead>
+        <tr>
+            <td style="text-align:left">
+                <input type="radio" name="ChargeAmount" id="charge1" value="1" @(Model.ChargeAmount == 1 ? "checked" : "") />&nbsp;<label for="charge1" style="font-weight:normal"><span id="p1">
+                @if(Model.Payment == 1)
+                {
+                    @:1$
+                }else
+                {
+                    @:1,000 원
+                }
+                </span> (1,000 원)&nbsp;</label>
+            </td>
+            <td style="text-align:left">
+                <input type="radio" name="ChargeAmount" id="charge2" value="3" @(Model.ChargeAmount == 3 ? "checked" : "") />&nbsp;<label for="charge2" style="font-weight:normal"><span id="p2">
+                @if(Model.Payment == 1)
+                {
+                    @:3$
+                }else
+                {
+                    @:3,000 원
+                }
+                </span> (3,000 원)&nbsp;</label>
+</td>
+            <td style="text-align:left">
+                <input type="radio" name="ChargeAmount" id="charge3" value="5" @(Model.ChargeAmount == 5 ? "checked" : "") />&nbsp;<label for="charge3" style="font-weight:normal"><span id="p3">
+                @if(Model.Payment == 1)
+                {
+                    @:5$
+                }else
+                {
+                    @:5,000 원
+                }
+                </span> (5,000 원)&nbsp;</label>
+</td>
+        </tr>
+        <tr>
+            <td style="text-align:left">
+                <input type="radio" name="ChargeAmount" id="charge4" value="7" @(Model.ChargeAmount == 7 ? "checked" : "") />&nbsp;<label for="charge4" style="font-weight:normal"><span id="p4">
+                @if(Model.Payment == 1)
+                {
+                    @:7$
+                }else
+                {
+                    @:7,000 원
+                }
+                </span> (7,000 원)&nbsp;</label>
+</td>
+            <td style="text-align:left">
+                <input type="radio" name="ChargeAmount" id="charge5" value="10" @(Model.ChargeAmount == 10 ? "checked" : "") />&nbsp;<label for="charge5" style="font-weight:normal"><span id="p5">
+                @if(Model.Payment == 1)
+                {
+                    @:10$
+                }else
+                {
+                    @:10,000 원
+                }
+                </span> (10,000 원)&nbsp;</label>
+</td>
+            <td style="text-align:left">
+                <input type="radio" name="ChargeAmount" id="charge6" value="15" @(Model.ChargeAmount == 15 ? "checked" : "") />&nbsp;<label for="charge6" style="font-weight:normal"><span id="p6">
+                @if(Model.Payment == 1)
+                {
+                    @:15$
+                }else
+                {
+                    @:15,000 원
+                }
+                </span> (15,000 원)&nbsp;</label>
+</td>
+        </tr>
+    </table>
+    <p>*필수동의항목</p>
+    <p>
+        @Html.CheckBoxFor(m => m.AgreementCheck1, true) <label for="AgreementCheck1"  style="font-weight:normal">결제 이용약관 동의 *</label>
+    </p>
+    <p>
+        @Html.CheckBoxFor(m => m.AgreementCheck2, true) <label for="AgreementCheck2" style="font-weight:normal">결제대행사 이용약관 및 결제정보 제공에 대한 동의 *</label>
+    </p>
+    <input type="submit" class="btn btn-warning" value="충전하기" />
+}
+
+@section Scripts {
+    <script>
+        function getPayment() {
+            const paymentNodeList = document.getElementsByName('Payment');
+
+            paymentNodeList.forEach((node) => {
+                if (node.checked) {
+                    if (node.value == 0) {
+                        var p1 = "1,000원";
+                        var p2 = "3,000원";
+                        var p3 = "5,000원";
+                        var p4 = "7,000원";
+                        var p5 = "10,000원";
+                        var p6 = "15,000원";
+
+                    } else if (node.value == 1) {
+                        var p1 = "1$";
+                        var p2 = "3$";
+                        var p3 = "5$";
+                        var p4 = "7$";
+                        var p5 = "10$";
+                        var p6 = "15$";
+                    } else if (node.value == 2) {
+                        var p1 = "1,000원";
+                        var p2 = "3,000원";
+                        var p3 = "5,000원";
+                        var p4 = "7,000원";
+                        var p5 = "10,000원";
+                        var p6 = "15,000원";
+                    }
+
+                    document.getElementById("p1").innerHTML = p1;
+                    document.getElementById("p2").innerHTML = p2;
+                    document.getElementById("p3").innerHTML = p3;
+                    document.getElementById("p4").innerHTML = p4;
+                    document.getElementById("p5").innerHTML = p5;
+                    document.getElementById("p6").innerHTML = p6;
+                }
+            })
+        }
+    </script>
+}

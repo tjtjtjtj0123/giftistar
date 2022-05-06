@@ -1,0 +1,92 @@
+﻿
+@{
+    ViewBag.Title = "Register";
+}
+@using test211005.Models
+@model RegisterViewModel
+<div class="body-content" style="text-align:center;">
+    <div style="display:inline-block; float:none;text-align:center;">
+            <img style="height: 250px; width: 250px;"
+                 src="~/Content/welcomeimg.png"
+                 alt="Grapefruit slice atop a pile of other slices">
+            @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "form-horizontal" }))
+            {
+                @Html.ValidationSummary(true)
+                <table style="margin-bottom:10%">
+                    <tr>
+                        <td colspan="2" style="text-align:left; font-size:small;">*필수항목</td>
+                    </tr>
+                    <tr>
+                        <th>아이디 *</th>
+                        <td>@Html.TextBoxFor(m => m.UserId, new { @Class = "form-control" , placeholder = "4~50자 이내 입력"})  </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align:left;"><font color="red" size="2">@ViewBag.UserIdExist @Html.ValidationMessageFor(m => m.UserId)</font></td>
+                    </tr>
+                    <tr>
+                        <th>비밀번호 *</th>
+                        <td>@Html.PasswordFor(m => m.UserPwd, new { @Class = "form-control" , placeholder = "최소 8자 이상 입력"})</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align:left;"><font color="red" size="2">@Html.ValidationMessageFor(m => m.UserPwd)</font></td>
+                    </tr>
+                    <tr>
+                        <th>비밀번호 확인 *</th>
+                        <td>@Html.PasswordFor(m => m.UserPwdCheck, new { @Class = "form-control"})</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align:left;"><font color="red" size="2">@Html.ValidationMessageFor(m => m.UserPwdCheck)</font></td>
+                    </tr>
+                    <tr>
+                        <th>이름 *</th>
+                        <td>@Html.TextBoxFor(m => m.UserName, new { @Class = "form-control" , placeholder = "한영만 입력 가능"})</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="text-align:left;"><font color="red" size="2">@Html.ValidationMessageFor(m => m.UserName)</font></td>
+                    </tr>
+                    <tr>
+                        <th>생일</th>
+                        <td style="text-align:left">
+                            <div class="tui-datepicker-input tui-datetime-input tui-has-focus form-control" style="z-index:1000">
+                                @*<input type="text" id="datepicker-input" aria-label="Date-Time">*@
+                                @Html.TextBoxFor(m => m.UserBirth, new { @id = "datepicker-input" })
+                                <span class="tui-ico-date"></span>
+                            </div>
+                            <div id="wrapper" style="margin-top: -1px;"></div>
+                        </td>
+                        <td><font color="red">@Html.ValidationMessageFor(m => m.UserBirth)</font></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="text-align:center"><input type="submit" value="등록" class="form-control btn btn-warning" /></td>
+                    </tr>
+                </table>
+            }
+        </div>
+    </div>
+
+        @section Scripts {
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    var datepicker = new tui.DatePicker('#wrapper',
+                        {
+                            language: 'ko',
+                            date: new Date(),
+                            selectableRanges: [
+                                [null, new Date()]
+                            ],
+                            input: {
+                                element: '#datepicker-input',
+                                format: 'yyyy-MM-dd'
+                            }
+                        });
+
+                });
+            </script>
+        }

@@ -1,0 +1,334 @@
+﻿<!--상품 판매하기 - 상품 판매 등록 페이지(S100)-->
+@{
+    ViewBag.Title = "ProductRegist";
+}
+
+@model GifticonModel
+@using test211005.Models
+<h2>상품 판매하기</h2>
+<hr />
+<table>
+    <tr>
+        <td>
+            상품명 검색
+        </td>
+        @using (Ajax.BeginForm("SearchKeyword", "Product", null))
+        {
+        <td>
+            <input type="text" id="keyword" class="form-control">
+        </td>
+        <td>
+            <input type="button" id="submit" value="입력" class="btn btn-warning">
+        </td>
+        }
+    </tr>
+    <tr>
+        <td colspan="3">
+            <p style="font-size:small;">※ 검색어 없이 입력할 경우, 판매 가능한 모든 상품 리스트를 확인할 수 있습니다.</p>
+            @using (Ajax.BeginForm("ChooseProduct", "Product", null))
+            {
+            <table id="tablList" class="table table-sm"></table>
+            <div class="text-center"> <!--페이징처리 - 충전 내역 페이지-->
+                <div class="btn-group" id="pageBtn"></div>
+            </div>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td>상품명</td>
+        <td colspan="2">
+            <text name="ItemName" id="itemName">자동입력</text>
+        </td>
+    </tr>
+    <tr>
+        <td>발행처</td>
+        <td colspan="2">
+            <text name="itemProviderName" id="itemProviderName">자동입력</text>
+        </td>
+    </tr>
+    <tr>
+        <td>원가</td>
+        <td colspan="2">
+            <text name="itemRealPrice" id="itemRealPrice">자동입력</text>
+        </td>
+    </tr>
+    @using (Html.BeginForm("ProductRegist", "Product", FormMethod.Post, new { @class = "form-horizontal", enctype="multipart/form-data", onsubmit= "return btnClick();" }))
+    {
+        <tr>
+            <td>유효기간</td>
+            <td colspan="2">
+                <div class="tui-datepicker-input tui-datetime-input tui-has-focus form-control" style="z-index:1000">
+                    @*<input type="text" id="datepicker-input" aria-label="Date-Time">*@
+                    @Html.TextBoxFor(m => m.DueDate, new { @id = "datepicker-input"})
+                    <span class="tui-ico-date"></span>
+                </div>
+                <div id="wrapper" style="margin-top: -1px;"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>판매가</td>
+            <td colspan="2">
+                @*@Html.TextBoxFor(m => m.ItemSellingPriceStr, new { @Class="form-control", placeHolder="0"})*@
+                <input type="number" name="ItemSellingPriceStr" id="ItemSellingPriceStr" placeholder="0" class="form-control"/>
+            </td>
+        </tr>
+        <tr>
+            <td>기프티콘 이미지</td>
+            <td>
+                <input type="file" id="imgfile" name="imgfile"/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align:left">
+                @Html.ActionLink("취소", "Index", "Home", new { @Class = "btn btn-warning"})
+                <input type="submit" value="등록" class="btn btn-warning" />
+            </td>
+        </tr>
+    }
+</table>
+<input type="file" id="chooseFile" name="chooseFile" accept="image/*" onchange="loadFile(this)" style="visibility: hidden;">
+@section Scripts {
+    <script type="text/javascript">
+        function loadFile(input) {
+            var file = input.files[0];
+
+            var name = document.getElementById('fileName');
+            name.textContent = file.name;
+
+            var newImage = document.createElement("img");
+            newImage.setAttribute("class", 'img');
+
+            newImage.src = URL.createObjectURL(file);
+            console.log(newImage.src);
+
+            newImage.style.width = "70%";
+            newImage.style.height = "70%";
+            newImage.style.visibility = "hidden";   //버튼을 누르기 전까지는 이미지 숨기기
+            newImage.style.objectFit = "contain";
+
+            var container = document.getElementById('image-show');
+            container.appendChild(newImage);
+
+            var newImage = document.getElementById('image-show').lastElementChild;
+            newImage.style.visibility = "visible";
+
+            document.getElementById('image-upload').style.visibility = 'hidden';
+
+            document.getElementById('fileName').textContent = null;
+        };
+    </script>
+    <script type="text/javascript">
+        var IsExistedProduct = 0;
+        var realItemPrice = 0;
+        function btnClick() { // 유효성 체크
+            var ItemSellingPricestr = $('#ItemSellingPriceStr').val();
+            var imgfile = $('#imgfile').val();
+
+            if (IsExistedProduct == 0) {
+                alert('기프티콘에 해당하는 상품을 골라주세요.');
+                console.log(IsExistedProduct);
+                return false;
+            }
+            if (ItemSellingPricestr == "0") {
+                alert('판매가는 1원 이상으로만 설정 가능합니다.');
+                return false;
+            }
+            if (parseInt(ItemSellingPricestr, 10) > realItemPrice) {
+                alert('판매가는 원가보다 클 수 없습니다.');
+                return false;
+            }
+            if (ItemSellingPricestr == "") {
+                alert('판매가를 입력해주세요.');
+                return false;
+            }
+            if (imgfile == "") {
+                alert('파일을 선택해주세요.');
+                return false;
+            }
+            if (imgfile.substring(imgfile.length - 4, imgfile.length) != ".jpg" && imgfile.substring(imgfile.length - 4, imgfile.length) != ".png" && imgfile.substring(imgfile.length - 5, imgfile.length) != ".jpeg") {
+                alert('jpg, jpeg, png 확장자 파일만 선택이 가능합니다.');
+                return false;
+            }
+            return true;
+        }
+
+        $(document).ready(function () {
+            var date = new Date();
+            var datepicker = new tui.DatePicker('#wrapper',
+                {
+                    language: 'ko',
+                    date: new Date(),
+                    selectableRanges: [
+                      [new Date(), new Date(9999,12,31)]
+                    ],
+                    input: {
+                        element: '#datepicker-input',
+                        format: 'yyyy-MM-dd'
+                    }
+                });
+        });
+
+        $('#submit').click(function () {
+            var keyword = $('#keyword').val();
+            console.log(keyword);
+            var urlData = '@Url.Action("SearchKeyword", "Product")' + "?keyword=" + keyword;
+            var pageNumber = 1;
+            //alert(sendData);
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var str = "";
+                    var totalRowCount = 0;
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD><img style=\"width: 70px; height: 70px; border-radius:5%\" src=\"../Content/" + val.ItemNo + ".jpg\" alt=\"Grapefruit slice atop a pile of other slices\"></TD>"
+                        str += "<TD>" + val.ItemProviderName + "</TD>"
+                        str += "<TD id=\"itemChecked\" value=\"" + val.ItemNo + "\">" + val.ItemName + "</TD>"
+                        str += "<TD>"
+                        str += "<input type=\"button\" class=\"btn btn-warning\" id=\"checkItem\" name=\""+ val.ItemNo +"\" value=\"선택\" class=\"btn btn-warning\">"
+                        str += "</div>"
+                        str += "</TD>"
+                        str += "</TR>"
+                        totalRowCount = val.TotalRowCount;
+                    });
+                    var totalPageCount = Math.ceil(totalRowCount / 5);
+                    var start = 1;
+                    var pageStr = "";
+                    /*페이징 번호*/
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + (start - 1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+                    console.log(totalPageCount);
+                    var lastPage = parseInt((totalPageCount - 1) / 5, 10) * 5 + 1;
+                    if (start == lastPage) { // 마지막 페이지Set인지 확인
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++) {
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    } else {
+                        for (var i = start; i < start + 5; i++) {
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + (start + 5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    $("#pageBtn").append(pageStr);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+
+        $(document).on("click", ".filterBtn", function () {
+            var keyword = $('#keyword').val();
+            console.log(keyword);
+
+            var pageNumber = $(this).data("no");
+            console.log(pageNumber);
+            var urlData = '@Url.Action("SearchKeyword", "Product")' + "?keyword=" + keyword + "&page=" + pageNumber;
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    var objJson = jQuery.parseJSON(data);
+                    var str = "";
+                    var totalRowCount = 0;
+                    $('#tablList').empty();
+                    $('#pageBtn').empty();
+                    $.each(objJson, function (i, val) {
+                        str += "<TR>"
+                        str += "<TD><img style=\"width: 70px; height: 70px; border-radius:5%\" src=\"../Content/" + val.ItemNo + ".jpg\" alt=\"Grapefruit slice atop a pile of other slices\"></TD>"
+                        str += "<TD>" + val.ItemProviderName + "</TD>"
+                        str += "<TD id=\"itemChecked\" value=\"" + val.ItemNo + "\">" + val.ItemName + "</TD>"
+                        str += "<TD>"
+                        str += "<input type=\"button\" class=\"btn btn-warning\" id=\"checkItem\" name=\"" + val.ItemNo + "\" value=\"선택\" class=\"btn btn-warning\">"
+                        str += "</div>"
+                        str += "</TD>"
+                        str += "</TR>"
+                        totalRowCount = val.TotalRowCount;
+                    });
+                    var totalPageCount = Math.ceil(totalRowCount / 5);
+                    var start = parseInt((pageNumber - 1) / 5, 10) * 5 + 1;
+                    var pageStr = "";
+                    /*페이징 번호*/
+                    if (start != 1)
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + (start - 1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+                    console.log(totalPageCount);
+                    var lastPage = parseInt((totalPageCount - 1) / 5, 10) * 5 + 1;
+                    if (start == lastPage) { // 마지막 페이지Set인지 확인
+                        var count = totalPageCount - start;
+                        for (var i = start; i <= totalPageCount; i++) {
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                    } else {
+                        for (var i = start; i < start + 5; i++) {
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                            if (pageNumber == i)
+                                pageStr += "warning\">"
+                            else
+                                pageStr += "default\">"
+                            pageStr += i + "</div></a>"
+                        }
+                        pageStr += "<a href=\"javascript:void(0);\" class=\"filterBtn\" data-no=\"" + (start + 5) + "\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                    }
+                    $("#tablList").append(str);
+                    $("#pageBtn").append(pageStr);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+
+        $(document).on("click", "#checkItem", function () {
+            var date = $('#datepicker-input').val();
+            console.log(date);
+            console.log("아이템 눌림");
+            var Itemvalue = $(this).attr("name");
+            var urlData = '@Url.Action("ChooseProduct", "Product")' + "?itemNo=" + Itemvalue;
+            //alert(sendData);
+            $.ajax({
+                type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                success: function (data1) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    console.log("뿅");
+                    var objJson1 = jQuery.parseJSON(data1);
+                    var str = "";
+                    $.each(objJson1, function (idx, v) {
+                        IsExistedProduct = 1;
+                        const element = document.getElementById('itemName');
+                        element.innerHTML = v.ItemName;
+                        const element1 = document.getElementById('itemProviderName');
+                        element1.innerHTML = v.ItemProviderName;
+                        const element2 = document.getElementById('itemRealPrice');
+                        element2.innerHTML = v.ItemRealPrice.toLocaleString('ko-KR') + "원";
+                        realItemPrice = v.ItemRealPrice;
+                    });
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    alert("통신 실패.")
+                }
+            });
+        })
+
+    </script>
+}

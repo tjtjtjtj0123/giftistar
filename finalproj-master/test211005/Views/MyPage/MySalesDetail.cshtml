@@ -1,0 +1,50 @@
+﻿<!--판매 등록한 상품 상세보기(MP510)-->
+@model GifticonModel
+@using test211005.Models
+<hr />
+<table>
+    <tr>
+        <td>
+            <p style="text-align:left">@(Model.ItemProviderName)</p>
+            <p style="font-weight:bold; text-align:left">@(Model.ItemName)</p>
+        </td>
+        <td style="text-align:right;">
+            <h3>정가 @(String.Format("{0:#,0}", Model.ItemRealPrice))원</h3>
+        </td>
+    </tr>
+    <tr>
+        <td style="vertical-align:middle;">
+            <img style="width: 123px; height: 123px;"
+                 src="~/Content/@(Model.ItemNo).jpg"
+                 alt="Grapefruit slice atop a pile of other slices">
+        </td>
+        <td>
+            <table>
+                <tr>
+                    <td>기본 주의 사항</td>
+                    <td>기프티스타에서 발송된 상품은 B2B전용 상품으로 유효기간 연장 및 환불이 불가합니다.</td>
+                </tr>
+                <tr>
+                    <td>유효기간</td>
+                    <td>@Model.DueDate</td>
+                </tr>
+                <tr>
+                    <td>판매가</td>
+                    <td>@(String.Format("{0:#,0}", Model.ItemSellingPrice))원</td>
+                </tr>
+                <tr>
+                    <td>판매여부</td>
+                    <td>@Model.SellingStatus</td>
+                </tr>
+                <tr>
+                    <td>기프티콘<br/>이미지</td>
+                    <td>
+                        <img style="width: 30%; height: 30%;"
+                             src="@(Model.imgfile)"
+                             alt="Grapefruit slice atop a pile of other slices">
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>

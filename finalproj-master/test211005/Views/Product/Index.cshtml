@@ -1,0 +1,352 @@
+﻿<!--상품 검색 - 상품 리스트 페이지(M200)-->
+@model List<ItemModel>
+@using test211005.Models
+@{
+    int pageNum = ViewBag.Page ?? 1;
+    int totalPageCount = int.Parse(Session["totalPageCount"].ToString());
+    int start = (pageNum - 1) / 5 * 5 + 1;
+    var parameter = Request.QueryString["ac"];
+    //Check parameter here and display Message
+    if (parameter == "success")
+    {
+        @:<script>alert('해당 상품에 대해 사용자(본인)가 판매 등록한 기프티콘을 제외하곤 구매 가능한 기프티콘이 없습니다.');</script>
+    }
+}
+<h2>판매중인 상품 리스트</h2>
+<hr />
+<table width="100%">
+    <tr>
+        <td style="text-align:left">
+            @using (Ajax.BeginForm("SearchProductByType", "Product", null))
+            {
+                <fieldset>
+                    <div>
+                        <div style="float:left; margin-left:10px;">
+                            <select id="CategoryType" name="CategoryType" onchange="categoryChange(this)">
+                                <!--카테고리 selectBox : DB 정보로 갈아끼워야함-->
+                                <option selected="selected" value="0">카테고리 선택</option>
+                                <option value="10">편의점</option>
+                                <option value="20">패스트푸드</option>
+                                <option value="30">카페</option>
+                                <option value="40">베이커리</option>
+                            </select>
+                        </div>
+
+                        <div style="float:left; margin-left:10px;">
+                            <select id="BrandType" name="BrandType">
+                                <!--브랜드 selectBox : DB 정보로 갈아끼워야함-->
+                                <option selected="selected" value="" disabled>브랜드 선택</option>
+                            </select>
+                        </div>
+
+                        <div style="float:left; margin-left:10px;margin-right:10px;">
+                            <select id="CostLineType" name="CostLineType">
+                                <!--가격대 selectBox-->
+                                <option selected="selected" value="0">가격대 선택</option>
+                                <option value="1">0~5천원</option>
+                                <option value="2">5천원~1만원</option>
+                                <option value="3">1~3만원</option>
+                                <option value="4">3~5만원</option>
+                                <option value="5">5만원 이상</option>
+                            </select>
+                        </div>
+                        <input class="btn btn-warning" type="button" id="submit" value="검색">
+                    </div>
+                </fieldset>
+            }
+        </td>
+    </tr>
+    @if (Model.Count != 0)
+    {
+        <tr>
+            <td>
+                <table id="tablList">
+                    @{ var i = 0;}
+                    @foreach (ItemModel row in Model)
+                {
+                    if (i % 5 == 0)
+                    {
+                            @:<tr>
+                                }
+                        <td style="width:20%; vertical-align:top">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <img style="width: 123px; height: 123px; border-radius:5%"
+                                             src="~/Content/@(row.ItemNo).jpg"
+                                             alt="Grapefruit slice atop a pile of other slices">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>@(row.ItemProviderName)</td>
+                                </tr>
+                                <tr>
+                                    <td>@Html.ActionLink(row.ItemName, "ProductDetail/" + row.ItemNo, "Product")</td>
+                                </tr>
+                                <tr>
+                                    <td><span style="text-decoration:line-through;">@(String.Format("{0:#,0}", row.ItemRealPrice)) 원</span> → @(String.Format("{0:#,0}", row.ItemLowestPrice)) 원 (@(row.BiggestDiscountPercent)%↓)</td>
+                                </tr>
+                            </table>
+                        </td>
+                        if (Model.Count / 5 < 1 && i == (Model.Count - 1))
+                        {
+                            <td colspan="@(5 - Model.Count)">&nbsp;</td>
+                                @:</tr>
+                        }
+                        if (i % 5 == 4)
+                        {
+                            @:</tr>
+                        }
+                        { i += 1; }
+                    }
+                </table>
+                </td>
+                </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td><br />판매중인 상품이 없습니다.</td>
+                            </tr>
+                        }
+    </table>
+    <div id="printMsg">
+
+    </div>
+    <div class="text-center">
+        <div class="btn-group" id="pageBtn">
+            @if (start != 1)
+            {
+                <a class="btn btn-default" href="?page=@(start-1)"><</a>
+            }
+            @if (start == (Convert.ToInt32((totalPageCount - 1) / 5) * 5 + 1))
+            { // 마지막 페이지Set인지 확인
+                for (int j = start; j <= totalPageCount; j++)
+                {
+                    <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+                }
+            }
+            else
+            {
+                for (int j = start; j < start + 5; j++)
+                {
+                    <a class="btn btn-@(pageNum == j ? "warning" : "default")" href="?page=@(j)">@(j)</a>
+                }
+                <a class="btn btn-default" href="?page=@(start+5)">></a>
+            }
+        </div>
+    </div>
+    @section Scripts {
+        <script type="text/javascript">
+            function categoryChange(e) {
+                /*동적 selectbox 선택*/
+                var good_a = ["전체","CU", "세븐일레븐", "GS25"]; // 편의점
+                var good_b = ["전체","도미노피자", "이삭토스트", "맥도날드", "써브웨이"]; // 패스트푸드
+                var good_c = ["전체","공차", "스타벅스", "메가커피"]; // 카페
+                var good_d = ["전체","뚜레쥬르", "파리바게트"]; // 베이커리
+
+                var target = $('#BrandType');
+                console.log(target.val());
+                if (e.value == 10)
+                    var d = good_a;
+                else if (e.value == 20)
+                    var d = good_b;
+                else if (e.value == 30)
+                    var d = good_c;
+                else if (e.value == 40)
+                    var d = good_d;
+                else {
+                    var d = ["브랜드 선택"];
+                }
+                target.empty();
+                console.log(d);
+                for (x in d) {
+                    var opt = document.createElement("option");
+                    if (d[x] == "브랜드 선택") {
+                        opt.value = "";
+                        opt.disabled = true;
+                        opt.selected = "selected";
+                    }
+                    else if (d[x] == "전체")
+                        opt.value = "";
+                    else
+                        opt.value = d[x];
+                    opt.innerHTML = d[x];
+                    $('#BrandType').append(opt);
+                }
+            }
+        </script>
+        <script type="text/javascript">
+            var categoryType = 0;
+            var brandType = null;
+            var costLineType = 0;
+            $('#submit').click(function () {
+                categoryType = ($('#CategoryType').val() != null) ? $('#CategoryType').val() : 0;
+                brandType = $('#BrandType').val() != null ? $('#BrandType').val() : 0;
+                costLineType = $('#CostLineType').val() != null ? $('#CostLineType').val() : 0;
+                var totalRowCount = 0;
+
+                var sendData = $('input[name=keyword]').val();
+                var urlData = '@Url.Action("SearchProductByType", "Product")' + '?categoryType=' + categoryType + "&brandType=" + brandType + "&costLineType=" + costLineType;
+                //alert(sendData);
+                $.ajax({
+                    type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                    url: urlData,            // Json 형식의 데이터이다.
+                    success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                        document.getElementById("printMsg").innerHTML = "";
+                        var objJson = jQuery.parseJSON(data);
+                        var dataLength = Object.keys(objJson).length;
+                        var str = "";
+                        $('#tablList').empty();
+                        $('#pageBtn').empty();
+                        $.each(objJson, function (i, val) {
+                            if (i % 5 == 0)
+                                str += "<TR>"
+                            str += "<TD style=\"width:20%; vertical-align:top\">"
+                            str += "<TABLE>"
+                            str += "<TR>"
+                            str += "<TD>" + "<img style=\"width: 123px; height: 123px;\" src=\"../Content/" + val.ItemNo + ".jpg\" alt=\"뿅\">" + "</TD>"
+                            str += "</TR>"
+                            str += "<TR>"
+                            str += "<TD>" + val.ItemProviderName + "</TD>"
+                            str += "</TR>"
+                            str += "<TR>"
+                            str += "<TD>" + "<a href=\"/Product/ProductDetail/" + val.ItemNo + "\"><span>" + val.ItemName + "</span></a>" + "</TD>"
+                            str += "</TR>"
+                            str += "<TR>"
+                            str += "<TD>" + "<span style=\"text-decoration:line-through;\">" + val.ItemRealPrice.toLocaleString('ko-KR') + " 원</span> → " + val.ItemLowestPrice.toLocaleString('ko-KR') + " 원 (" + val.BiggestDiscountPercent + "%↓)" + "</TD>"
+                            str += "</TR>"
+                            str += "</TABLE>"
+                            str += "</TD>"
+                            if (dataLength / 5 < 1 && i == (dataLength - 1))
+                                str += "<TD colspan=\"(5 - dataLength)\">&nbsp;</TD></TR>"
+                            if (i % 5 == 4)
+                                str += "</TR>"
+                            totalRowCount = parseInt(val.TotalRowCount, 10);
+                        });
+                        var totalPageCount = totalRowCount / 10;
+                        if (totalRowCount % 10 != 0) // 마지막 페이지set에 페이지수가 5개 아닌 경우
+                            totalPageCount++;
+                        var pageStr = "";
+                        var start = 1;
+                        var pageNumber = 1;
+                        /*페이징 번호*/
+                        if (start != 1)
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"" + (start - 1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                        var lastPage = parseInt((totalPageCount - 1) / 5, 10) * 5 + 1;
+                        if (start == lastPage) { // 마지막 페이지Set인지 확인
+                            for (var i = start; i <= totalPageCount; i++) {
+                                pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                                if (pageNumber == i)
+                                    pageStr += "warning\">"
+                                else
+                                    pageStr += "default\">"
+                                pageStr += i + "</div></a>"
+                            }
+                        } else {
+                            for (var i = start; i < start + 5; i++) {
+                                pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                                if (pageNumber == i)
+                                    pageStr += "warning\">"
+                                else
+                                    pageStr += "default\">"
+                                pageStr += i + "</div></a>"
+                            }
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"@(start+5)\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                        }
+                        $("#tablList").append(str);
+                        $("#pageBtn").append(pageStr);
+                        if (totalRowCount == 0) {
+                            document.getElementById("printMsg").innerHTML = '<span style=\"text-align:center;\">검색된 상품이 없습니다.</span>';
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                        alert("통신 실패.")
+                    }
+                });
+            })
+
+            $(document).on("click", ".itemBtn", function () { // ajax 호출 후, 버튼 누른경우 -- 구매내역
+                var totalRowCount = 0;
+                var pageNumber = $(this).data("no");
+
+                var sendData = $('input[name=keyword]').val();
+                var urlData = '@Url.Action("SearchProductByType", "Product")' + '?categoryType=' + categoryType + "&brandType=" + brandType + "&costLineType=" + costLineType + "&page=" + pageNumber;
+
+                $.ajax({
+                    type: "GET",            // HTTP method type(GET, POST) 형식이다.
+                    url: urlData,            // Json 형식의 데이터이다.
+                    success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                        var objJson = jQuery.parseJSON(data);
+                        var str = "";
+                        var dataLength = Object.keys(objJson).length;
+                        $('#tablList').empty();
+                        $('#pageBtn').empty();
+                        $.each(objJson, function (i, val) {
+                            if (i % 5 == 0)
+                                str += "<TR>"
+                            str += "<TD style=\"width:20%; vertical-align:top\">"
+                            str += "<TABLE>"
+                            str += "<TR>"
+                            str += "<TD>" + "<img style=\"width: 123px; height: 123px;\" src=\"../Content/" + val.ItemNo + ".jpg\" alt=\"뿅\">" + "</TD>"
+                            str += "</TR>"
+                            str += "<TR>"
+                            str += "<TD>" + val.ItemProviderName + "</TD>"
+                            str += "</TR>"
+                            str += "<TR>"
+                            str += "<TD>" + "<a href=\"/Product/ProductDetail/" + val.ItemNo + "\"><span>" + val.ItemName + "</span></a>" + "</TD>"
+                            str += "</TR>"
+                            str += "<TR>"
+                            str += "<TD>" + "<span style=\"text-decoration:line-through;\">" + val.ItemRealPrice.toLocaleString('ko-KR') + " 원</span> → " + val.ItemLowestPrice.toLocaleString('ko-KR') + " 원 (" + val.BiggestDiscountPercent + "%↓)" + "</TD>"
+                            str += "</TR>"
+                            str += "</TABLE>"
+                            str += "</TD>"
+                            if (dataLength / 5 < 1 && i == (dataLength - 1))
+                                str += "<TD colspan=\"(5 - dataLength)\">&nbsp;</TD></TR>"
+                            if (i % 5 == 4)
+                                str += "</TR>"
+                            totalRowCount = parseInt(val.TotalRowCount, 10);
+                        });
+                        var totalPageCount = totalRowCount / 10;
+                        if (totalRowCount % 10 != 0) // 마지막 페이지set에 페이지수가 5개 아닌 경우
+                            totalPageCount++;
+                        var pageStr = "";
+                        var start = parseInt((pageNumber - 1) / 5, 10) * 5 + 1;
+
+                        /*페이징 번호*/
+                        if (start != 1)
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"" + (start - 1) + "\">" + "<div id=\"btnchkbefore\" class=\"btn btn-default\"><</div></a>"
+
+                        var lastPage = parseInt((totalPageCount - 1) / 5, 10) * 5 + 1;
+                        if (start == lastPage) { // 마지막 페이지Set인지 확인
+                            for (var i = start; i <= totalPageCount; i++) {
+                                pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                                if (pageNumber == i)
+                                    pageStr += "warning\">"
+                                else
+                                    pageStr += "default\">"
+                                pageStr += i + "</div></a>"
+                            }
+                        } else {
+                            for (var i = start; i < start + 5; i++) {
+                                pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"" + i + "\"><div id=\"" + "btnchk" + i + "\" class=\"btn btn-"
+                                if (pageNumber == i)
+                                    pageStr += "warning\">"
+                                else
+                                    pageStr += "default\">"
+                                pageStr += i + "</div></a>"
+                            }
+                            pageStr += "<a href=\"javascript:void(0);\" class=\"itemBtn\" data-no=\"@(start+5)\"><div id=\"btnchkbefore\" class=\"btn btn-default\">" + "></div></a>"
+                        }
+                        $("#tablList").append(str);
+                        $("#pageBtn").append(pageStr);
+
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                        alert("통신 실패.")
+                    }
+                });
+            })
+        </script>
+    }

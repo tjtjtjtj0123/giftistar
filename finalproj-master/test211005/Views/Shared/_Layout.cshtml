@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기프티스타</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <style>
+        td,th {
+            padding : 5px;
+            font-size:15px;
+            margin:5px;
+            text-align:center;
+            vertical-align:middle;
+        }
+        hr{
+            border-color:#FFBB00;
+            background-color:#FFBB00;
+            height:2px;
+        }
+        body{ font-family: 'Roboto', 'Spoqa Han Sans', 'Spoqa Han Sans JP', 'Sans-serif'; }
+    </style>
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui.date-picker/latest/tui-date-picker.css">
+    <link rel="stylesheet" href="//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,100,700">
+    <script src="https://uicdn.toast.com/tui.date-picker/latest/tui-date-picker.js"></script>
+</head>
+<body>
+    @if (ViewBag.Title == "popup") {
+        <div class="container body-content">
+            @RenderBody()
+        </div>
+    }
+    else {
+        <div class="navbar navbar-fixed-top">
+            <div class="container" style="background-color:#FFE08C">
+                <div class="navbar-header">
+                    <img class="fit-picture"
+                         src="~/Content/logo.png"
+                         alt="Grapefruit slice atop a pile of other slices">
+                </div>
+                <div class="navbar-collapse collapse" style="text-align:center;">
+                    <ul class="nav navbar-nav" style="display:inline-block; float:none; font-weight:800; font-size: large;">
+                        @if (Session["IsAdmin"] == null)
+                        {
+                            <li>@Html.ActionLink("기프티스타", "Index", "Home")</li>
+                        }
+                        else
+                        {
+                            <li>@Html.ActionLink("기프티스타", "Index", "Admin")</li>
+                        }
+                    </ul>
+                    @Html.Partial("_LoginPartial")
+                </div>
+            </div>
+        </div>
+        <br />
+        <div class="container body-content">
+            <div style="float: left; margin-right:20px; width:13%;">
+                <img style="width: 123px; height: 123px;"
+                     src="~/Content/developerImg.jpg"
+                     alt="Grapefruit slice atop a pile of other slices">
+                <p>Developed by 성연주</p>
+                @if (ViewBag.Title == "MP") { // 일반 사용자 마이페이지 퀵바
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">@Html.ActionLink("MY 캐시", "Index", "MyPage")</li>
+                    <li class="list-group-item">@Html.ActionLink("캐시 충전", "Charge", "MyPage")</li>
+                    <li class="list-group-item">@Html.ActionLink("상품 구매 내역", "MyPurchaseList", "MyPage")</li>
+                    <li class="list-group-item">@Html.ActionLink("상품 보유 내역", "MyItemList", "MyPage")</li>
+                    <li class="list-group-item">@Html.ActionLink("상품 판매 내역", "MySalesList", "MyPage")</li>
+                </ul>
+                }
+                else if (ViewBag.Title == "AP") // Admin 사용자 마이페이지 퀵바
+                {
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">@Html.ActionLink("전체 결제 내역", "Index", "Admin")</li>
+                    <li class="list-group-item">@Html.ActionLink("전체 구매 내역", "ShowAllPurchase", "Admin")</li>
+                    <li class="list-group-item">@Html.ActionLink("전체 판매 내역", "ShowAllSelling", "Admin")</li>
+                    <li class="list-group-item">@Html.ActionLink("이용자 계좌조회", "ShowAllUser", "Admin")</li>
+                </ul>
+                }
+                else
+                { // 상품 관리 퀵바
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">@Html.ActionLink("상품 검색", "Index", "Product")</li>
+                    <li class="list-group-item">@Html.ActionLink("상품 판매하기", "ProductRegist", "Product")</li>
+                </ul>
+                }
+            </div>
+            <div style="float:left; width: 80%;">
+                @RenderBody()
+            </div>
+        </div>
+        <div class="container body-content">
+            <hr style="height:1px;"/>
+            <footer>
+                <p style="text-align:center;">Copyright&copy; @DateTime.Now.Year Payletter,Inc. All rights reserved</p>
+            </footer>
+        </div>
+    }
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+
+
+
+
+

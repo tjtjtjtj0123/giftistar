@@ -1,0 +1,151 @@
+﻿<!--상품 구매(P100)-->
+@{
+    ViewBag.Title = "ProductPurchase";
+}
+@using test211005.Models
+@model PurchaseModel
+
+<h2>기프티콘 구매</h2>
+<hr />
+<h3>기프티콘 상품 정보</h3>
+<table>
+    <tr>
+        <td>
+            <img style="width: 123px; height: 123px; border-radius:5%"
+                 src="~/Content/@(Model.Item.ItemNo).jpg"
+                 alt="Grapefruit slice atop a pile of other slices">
+        </td>
+        <td>
+            <table>
+                <tr>
+                    <td style="text-align:left">@Model.Item.ItemProviderName</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left"><b>@Model.Item.ItemName</b></td>
+                </tr>
+                <tr>
+                    <td style="text-align:left">@(String.Format("{0:#,0}", Model.Item.ItemRealPrice)) 원</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td>구매 가능한 기프티콘 개수 : </td>
+        <td>@(Model.StockAmount)개</td>
+    </tr>
+</table>
+<form name="form">
+    <table>
+        <!--for문으로 기프티콘 리스트 출력-->
+        <tr>
+            <td>
+                <table>
+                    @for (int i = 0; i < Model.StockAmount; i++)
+                    {
+                        <tr>
+                            <td style="padding-bottom:15px;">상품 @(i + 1)</td>
+                            <td style="padding-bottom:15px;">유효기간 @(Model.Gifticons[i].DueDate.ToString("yyyy-MM-dd"))</td>
+                            <td style="padding-bottom:15px; text-align:right;">@(String.Format("{0:#,0}", @Model.Gifticons[i].ItemSellingPrice))원</td>
+                            <td style="padding-bottom:15px; text-align:right;">(@Model.Gifticons[i].DiscountPercent%↓)</td>
+                            <td style="padding-bottom:15px;"><input type="checkbox" name="chkbox" id="@(@Model.Gifticons[i].GifticonNo)" value=@(@Model.Gifticons[i].ItemSellingPrice) onclick="itemSum(this.form)" /></td>
+                        </tr>
+                    }
+                </table>
+            </td>
+        </tr>
+    </table>
+    <br />
+    <table>
+        <tr>
+            <td>총 결제 금액</td>
+            <td><input name="total_sum" type="text" class="form-control" value="0" size="10" readonly style="text-align:right"></td>
+        </tr>
+        <tr>
+            <td>보유 캐시</td>
+            <td><input name="totalCash" id="totalCash" type="text" class="form-control" size="10" data-price="@(Model.TotalAsset)" style="text-align:right" value=@(String.Format("{0:#,0}", Model.TotalAsset)) readonly></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align:left">
+                @{ string url = Url.Action("Charge/" + Model.Item.ItemNo, "MyPage"); }
+                <a href="@(url)" class="btn btn-warning">캐시충전</a>
+                <span>&nbsp;</span>
+                <a href="#" id="charge-btn" class="btn btn-warning">결제</a>
+            </td>
+        </tr>
+    </table>
+</form>
+
+@section Scripts {
+    <script>
+        var total = 0;
+        var list;
+
+        function itemSum(frm) {
+            var sum = 0;
+            list = [];
+            var count = frm.chkbox.length;
+
+            if (count == undefined) { // 1개
+                if (frm.chkbox.checked == true) {
+                    console.log(frm.chkbox.id);
+                    sum += parseInt(frm.chkbox.value);
+                    list[0] = frm.chkbox.id;
+                }
+            } else { // 1개 이상인 경우
+                for (var i = 0; i < count; i++) {
+                    if (frm.chkbox[i].checked == true) {
+                        console.log(frm.chkbox[i].id);
+                        sum += parseInt(frm.chkbox[i].value);
+                        list[i] = frm.chkbox[i].id;
+                    }
+                }
+            }
+            total = sum;
+            frm.total_sum.value = sum.toLocaleString('ko-KR');
+        }
+        $(document).ready(function(){
+            $("#charge-btn").click(function (event) {
+                var MyAsset = $("#totalCash").data("price");
+
+                if (total == 0)
+                    alert("상품을 선택해주세요.");
+                else if (MyAsset < total) { // 내 총 캐시 잔액 < 결제해야하는 금액
+                    alert("결제할 캐시가 부족합니다.");
+                    return;
+                }
+                else {
+                    event.preventDefault();
+                    var str = "@Url.Action("ProductPurchaseSuc", "Product", new {itemNo = Model.Item.ItemNo})" + "&total=" + total + "&GifticonNos=" + list;
+                    for(var i = 0; i < list.length; i++){
+                        str += "&GifticonNo=" + list[i];
+                    }
+                    window.location.href = str;
+                }
+            });
+        })
+    </script>
+}
+
+
+
+@*@section Scripts {
+    <script type="text/javascript">
+        $('#submit').click(function() {
+            var urlData = '@Url.Action("ProductPurchase", "Product")';
+            var data = '@Html.Raw(Json.Encode(Model))';
+            console.log(data);
+            //alert(sendData);
+            $.ajax({
+                type: "POST",            // HTTP method type(GET, POST) 형식이다.
+                url: urlData,            // Json 형식의 데이터이다.
+                data: data,
+                success: function (data) { // 비동기통신의 성공일경우 success콜백으로 들어옵니다. 'res'는 응답받은 데이터이다.
+                    alert("성공")
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                alert("통신 실패.")
+                }
+        });
+        })
+    </script>
+}*@

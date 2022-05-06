@@ -1,0 +1,162 @@
+﻿<!--보유한 상품 상세보기(MP410)-->
+@model HoldingItemModel
+@using test211005.Models
+
+<table>
+    <tr>
+        <td>
+            <p style="text-align:left">@(Model.ItemProviderName)</p>
+            <p style="font-weight:bold; text-align:left">@(Model.ItemName)</p>
+        </td>
+        <td style="text-align:right;">
+            <h3>정가 @(String.Format("{0:#,0}", Model.ItemRealPrice))원</h3>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img style="width: 123px; height: 123px;"
+                 src="~/Content/@(Model.ItemNo).jpg"
+                 alt="Grapefruit slice atop a pile of other slices">
+        </td>
+        <td>
+            <table>
+                <tr>
+                    <td>기본 주의 사항</td>
+                    <td>기프티스타에서 발송된 상품은 B2B전용 상품으로 유효기간 연장 및 환불이 불가합니다.</td>
+                </tr>
+                @{ int i = 1;}
+                <tr>
+                    <td>수량</td>
+                    <td>@(Model.Gifticons.Count)개</td>
+                </tr>
+                <tr>
+                    <td>사용 가능 수량</td>
+                    <td>@(Model.AvailableItemAmount)개</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    @foreach (GifticonModel row in Model.Gifticons)
+    {
+        <tr>
+            <td colspan="2" style="padding:0px;">
+                <hr style="border:1px" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="text-align:left"><span>🎫</span> 기프티콘 @(i)</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <table width="100%">
+                    @if (row.IsPresent == 1)
+                    {
+                        <tr>
+                            <td>송신인</td>
+                            <td>@row.BuyerId</td>
+                        </tr>
+                    }
+                    <!--for문으로 이부분 돌려서 기프티콘 리스트 출력-->
+                    <tr>
+                        <td>유효기간</td>
+                        <td>@((row.DueDate).ToString("yyyy-MM-dd"))</td>
+                    </tr>
+                    <tr>
+                        <td>구매가</td>
+                        <td>@(String.Format("{0:#,0}", row.ItemSellingPrice))원</td>
+                    </tr>
+                    <tr>
+                        <td>상품 구매일자</td>
+                        <td>@row.RegDate</td>
+                    </tr>
+                    <tr>
+                        <td>사용 여부</td>
+                        <td>@row.GifticonStatus</td><!--if문으로 출력하기 - 판매 완료(0)/판매중(1)/판매불가(2)-->
+                    </tr>
+                    <tr>
+                        <td>기프티콘 이미지</td>
+                        <td>
+                            <img style="width: 30%; height: 30%;"
+                                 src="~/Content/upload/@(row.imgfile)"
+                                 alt="Grapefruit slice atop a pile of other slices">
+                        </td>
+                    </tr>
+                    @if (row.PurchaseStatus == 1)
+                    {
+                        <tr>
+                            <td colspan="2" style="text-align:right">
+                                @{ string clickUrl = Url.Action("MyItemDetail", "MyPage") + "?imgurl=" + row.imgfile; }
+                                <a href="@clickUrl" class="btn btn-warning">이미지 다운로드</a>
+                            </td>
+                        </tr>
+                                    }
+                </table>
+            </td>
+        </tr>
+                                        i++;
+                                    }
+</table>
+@section Scripts {
+    <script type="text/javascript">
+
+        $(".imgdownload").on("click", function () {
+            console.log("click!!");
+
+            var imgSrc = $(this).data("no");
+            var requesturl = '@Url.Action("Download", "MyPage")' + "?imgurl=" + imgSrc;
+            $.ajax({
+                type: "GET",
+                url: requesturl,
+                contentType: 'application/json; charset=utf-8',
+                success: function (req) {
+                    alert("success");
+                    window.location.href = '@Url.Action("Index","Home")';
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) { // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
+                    //console.log("code = " + request.status + " message = " + request.responseText + " error = " + error);
+                    console.log("code:" + XMLHttpRequest.status + "\n" + "message:" + XMLHttpRequest.responseText + "\n" + "error:" + errorThrown);
+                }
+            });
+        });
+
+
+        //$(".imgdownload").on("click", function () {
+        //    console.log("click!!");
+
+        //    var imgSrc = $(this).data("no");
+        //    console.log(imgSrc);
+        //    SaveToDisk(imgSrc,imgSrc)
+        //});
+        //function makeFrame(fileURL, fileName) {
+        //    ifrm = document.createElement("IFRAME");
+        //    ifrm.setAttribute("style", "display:none;");
+        //    ifrm.setAttribute("src", fileURL);
+        //    ifrm.setAttribute("name", fileName);
+        //    //ifrm.style.width = 0+"px";
+        //    //ifrm.style.height = 0+"px";
+        //    document.body.appendChild(ifrm);
+        //}
+
+        //function removeiframe() {
+        //    var iframes = document.getElementsByTagName('iframe');
+        //    for (var i = 0; i < iframes.length; i++) {
+        //        iframes[i].parentNode.removeChild(iframes[i]);
+        //    }
+        //}
+
+        //function SaveToDisk(fileURL, fileName) {
+        //    // for IE
+        //    if (window.ActiveXObject || "ActiveXObject" in window) {
+        //        makeFrame(fileURL, fileName);
+        //        alert(fileName);
+        //        var _window = window.open(fileURL, fileName);
+        //        //_window.document.close();
+        //        _window.document.execCommand('SaveAs', true, fileName || fileURL)
+        //        //_window.close();
+        //        removeiframe();
+        //    }
+        //}
+    </script>
+}

@@ -1,0 +1,80 @@
+﻿@model WithdrawModel
+@using test211005.Models
+<div class="body-content" style="text-align:center; width:100%;">
+    <div style="display:inline-block; float:none; width:70%;">
+        <h2>출금 신청</h2>
+        <p>기프티캐시를 계좌로 출금하세요.</p>
+        <hr />
+        <table width="100%">
+            <tr>
+                <td style="text-align:left; font-weight:bold">출금 금액</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="number" id="WithdrawAmount" name="WithdrawAmount" class="form-control" placeholder="출금할 캐시 금액을 입력해주세요.">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align:left">출금 가능한 기프티 캐시 총액:</td>
+                <td style="text-align:right">@(String.Format("{0:#,0}", Model.TotalCash))원</td>
+            </tr>
+            <tr>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="text-align:left; font-weight:bold">출금계좌</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <select name="BankName" id="BankName" class="form-control">
+                        <option value="1" selected>농협은행</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align:left">
+                    <input type="number" id="AccountNo" name="AccountNo" class="form-control" placeholder="계좌번호를 입력해주세요." />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="button" class="btn btn-warning form-control" id="withdraw" value="캐시 출금 신청하기" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+@section Scripts {
+<script>
+    $('#withdraw').click(function () {
+        var wAmount = $('#WithdrawAmount').val();
+        var myAsset = @(Model.TotalCash);
+        if (wAmount > myAsset){
+            alert('출금 금액은 보유 잔액보다 클 수 없습니다.')
+            return;
+        } else if (wAmount == 0 || wAmount == ''){
+            alert('입력하신 출금 금액을 확인해주세요.')
+            return;
+        }
+
+        var accountno = $('#AccountNo').val();
+        console.log(accountno);
+        console.log(wAmount);
+        if (accountno.length != 13){
+            alert('입력하신 계좌 번호를 확인해주세요.')
+            return;
+        }
+        
+        if(accountno == "3020000005942" || accountno == "3020000005936" || accountno == "3020000005939" || accountno == "3020000005941" || accountno == "3020000005938"){
+            alert('성공적으로 캐시 출금이 신청되었습니다.')
+            event.preventDefault();
+            var str = "@Url.Action("WithdrawSuc", "MyPage")" + "?accountNo=" + accountno + "&withdrawAmount=" + wAmount;
+            window.location.href = str;
+            console.log(str);
+        }else{
+            alert('입력하신 계좌 번호를 확인해주세요.')
+            return;
+        }
+    });
+</script>
+}
